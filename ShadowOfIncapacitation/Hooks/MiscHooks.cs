@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 
 using static Incapacitation.Incapacitation;
-using Mono.Cecil;
 
 namespace Incapacitation;
 
@@ -657,5 +656,21 @@ internal class MiscHooks
                 self.SetDestination(self.creature.realizedCreature.room.GetWorldCoordinate(self.ripplePathingTarget.pos));
             }
         }
+    }
+
+    public static void UpdateBreath(GraphicsModule self)
+    {
+        if (!breathstorage.TryGetValue(self, out BreathData breathData))
+        {
+            breathstorage.Add(self, new BreathData());
+            breathstorage.TryGetValue(self, out breathData);
+
+            breathData.lastBreath = breathData.breath;
+            breathData.breath = UnityEngine.Random.value;
+        }
+
+        breathData.lastBreath = breathData.breath;
+
+        breathData.breath += 0.0125f;
     }
 }

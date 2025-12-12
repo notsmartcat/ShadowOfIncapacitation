@@ -18,6 +18,8 @@ internal class Hooks
 
         On.Scavenger.Collide += ScavengerCollide;
 
+        On.ScavengerGraphics.DrawSprites += ScavengerGraphicsDrawSprites;
+
         new Hook(
             typeof(Scavenger).GetProperty(nameof(Scavenger.HeadLookPoint)).GetGetMethod(), ShadowOfScavengerHeadLookPoint);
     }
@@ -397,7 +399,7 @@ internal class Hooks
     {
         orig(self);
 
-        if (!inconstorage.TryGetValue(self.scavenger.abstractCreature, out _) || !IsComa(self.scavenger))
+        if (!IsComa(self.scavenger))
         {
             return;
         }
@@ -410,5 +412,31 @@ internal class Hooks
         {
             self.markAlpha = Mathf.Lerp(self.markAlpha, UnityEngine.Random.Range(0f, 0.5f), 0.25f);
         }
+
+        if (IsUncon(self.scavenger))
+        {
+            MiscHooks.UpdateBreath(self);
+        }
+    }
+
+    static void ScavengerGraphicsDrawSprites(On.ScavengerGraphics.orig_DrawSprites orig, ScavengerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPosV2)
+    {
+        orig(self, sLeaser, rCam, timeStacker, camPosV2);
+
+        if (!breathstorage.TryGetValue(self, out BreathData data) || !IsUncon(self.scavenger))
+        {
+            return;
+        }
+
+        float num4 = (Mathf.Sin(Mathf.Lerp(data.lastBreath, data.breath, timeStacker) * 3.1415927f * 2f) + 1f) * 0.5f;
+
+        float num6 = self.scavenger.bodyChunks[0].rad;
+
+        num6 *= 1f + num4 * (float)3 * 0.1f * 0.5f;
+
+        //sLeaser.sprites[self.ChestSprite].scale = num6 / 10f;
+
+        sLeaser.sprites[self.ChestSprite].scaleX = num6 * Mathf.Lerp(0.7f, 1.3f, self.iVars.fatness) / 10f;
+        sLeaser.sprites[self.ChestSprite].scaleY = (num6 + Mathf.Lerp(2f, 1.5f, self.iVars.narrowWaist)) / 10f;
     }
 }

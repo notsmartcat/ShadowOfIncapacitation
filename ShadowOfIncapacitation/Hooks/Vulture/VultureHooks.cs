@@ -16,6 +16,38 @@ internal class Hooks
         On.Vulture.Update += VultureUpdate;
 
         On.Vulture.VultureThruster.Utility += VultureThrusterUtility;
+
+        On.VultureGraphics.Update += VultureGraphicsUpdate;
+
+        On.VultureGraphics.DrawSprites += VultureGraphicsDrawSprites;
+    }
+
+    static void VultureGraphicsDrawSprites(On.VultureGraphics.orig_DrawSprites orig, VultureGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+    {
+        orig(self, sLeaser, rCam, timeStacker, camPos);
+
+        if (!breathstorage.TryGetValue(self, out BreathData data) || !IsUncon(self.vulture))
+        {
+            return;
+        }
+
+        float num4 = (Mathf.Sin(Mathf.Lerp(data.lastBreath, data.breath, timeStacker) * 3.1415927f * 2f) + 1f) * 0.5f;
+
+        float num6 = (self.IsKing ? 1.2f : 1f);
+
+        num6 *= 1f + num4 * (float)3 * 0.1f * 0.5f;
+
+        sLeaser.sprites[self.BodySprite].scale = num6;
+    }
+
+    static void VultureGraphicsUpdate(On.VultureGraphics.orig_Update orig, VultureGraphics self)
+    {
+        orig(self);
+
+        if (IsUncon(self.vulture))
+        {
+            MiscHooks.UpdateBreath(self);
+        }
     }
 
     static float VultureThrusterUtility(On.Vulture.VultureThruster.orig_Utility orig, Vulture.VultureThruster self)
@@ -34,7 +66,6 @@ internal class Hooks
 
         if (data.stunTimer > 0)
         {
-            //self.Stun(10);
             data.stunTimer -= 1;
         }
         if (data.stunCountdown > 0)

@@ -14,6 +14,46 @@ internal class Hooks
     public static void Apply()
     {
         On.Cicada.Update += CicadaUpdate;
+
+        On.CicadaGraphics.Update += CicadaGraphicsUpdate;
+
+        On.CicadaGraphics.DrawSprites += CicadaGraphicsDrawSprites;
+    }
+
+    static void CicadaGraphicsDrawSprites(On.CicadaGraphics.orig_DrawSprites orig, CicadaGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+    {
+        orig(self, sLeaser, rCam, timeStacker, camPos);
+
+        if (!breathstorage.TryGetValue(self, out BreathData data) || !IsUncon(self.cicada))
+        {
+            return;
+        }
+
+        float num4 = (Mathf.Sin(Mathf.Lerp(data.lastBreath, data.breath, timeStacker) * 3.1415927f * 2f) + 1f) * 0.5f;
+
+        float num6 = self.iVars.fatness;
+
+        num6 *= 1f + num4 * (float)3 * 0.1f * 0.5f;
+
+        float num7 = self.iVars.fatness;
+
+        num7 *= 1f + num4 * (((float)3 * 0.1f * 0.5f)/2);
+
+        sLeaser.sprites[self.BodySprite].scaleY = num7;
+
+        Vector2 vector = Vector3.Slerp(self.lastZRotation, self.zRotation, timeStacker);
+        float num2 = Custom.AimFromOneVectorToAnother(new Vector2(0f, 0f), vector);
+        sLeaser.sprites[self.BodySprite].scaleX = ((num2 > 0f) ? -1f : 1f) * (num6);
+    }
+
+    static void CicadaGraphicsUpdate(On.CicadaGraphics.orig_Update orig, CicadaGraphics self)
+    {
+        orig(self);
+
+        if (IsUncon(self.cicada))
+        {
+            MiscHooks.UpdateBreath(self);
+        }
     }
 
     static void CicadaUpdate(On.Cicada.orig_Update orig, Cicada self, bool eu)
