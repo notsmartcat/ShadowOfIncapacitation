@@ -35,7 +35,8 @@ public class ShadowOfOptions : OptionInterface
         die_threshold_min = config.Bind("die_threshold_min", 0.2f, new ConfigurableInfo("", new ConfigAcceptableRange<float>(0.1f, 3f), "", new object[1] { "" }));
         die_threshold_max = config.Bind("die_threshold_max", 0.5f, new ConfigurableInfo("", new ConfigAcceptableRange<float>(0.1f, 3f), "", new object[1] { "" }));
 
-        cheat_death = config.Bind("cheat_death", true, new ConfigurableInfo("If On Creatures affected by this mod can Cheat Death, which means they will not be replaced on the next cycle. (Default = true)", null, "", new object[1] { "Cheat Death" }));
+        cheat_death = config.Bind("cheat_death", false, new ConfigurableInfo("If On Creatures affected by this mod can Cheat Death, which means they will not be replaced on the next cycle. (Default = false)", null, "", new object[1] { "Cheat Death" }));
+        den_revive = config.Bind("den_revive", false, new ConfigurableInfo("If On Creatures that are either Unconscious or Incapacitated will be revived if brought into the player's Den. After being revived the creature will go to it's den (if it has a den) and the creature will be neutral to the Player unless attacked. (Default = false)", null, "", new object[1] { "Den Revive" }));
 
         blunt_uncon_guaranteed = config.Bind("blunt_uncon_guaranteed", true, new ConfigurableInfo("If On Incapacitated Creatures will be guaranteed to be knocked Unconscious state if hit in the head and their health if less then half (if applicable) (Default = true)", null, "", new object[1] { "Guaranteed Unconscious" }));
 
@@ -45,32 +46,44 @@ public class ShadowOfOptions : OptionInterface
 
         #region Creatures
         #region Base Game
+        #region BigSpider
+        spid_state = config.Bind("spid_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Big Spider"));
+
+        spid_mother = config.Bind("spid_mother", false, new ConfigurableInfo("If On Big Spider Mothers will not spew babies when it is Incapacitated or Unconscious. (Default = false)", null, "", new object[1] { "Mother" }));
+        spid_cling = config.Bind("spid_cling", false, new ConfigurableInfo("If On Incapacitated Big Spiders will cling onto creatures that touch it's front. This will attack the Spider to the Creature, most likely moving the Spider. (Default = false)", null, "", new object[1] { "Cling" }));
+        spid_collide = config.Bind("spid_collide", false, new ConfigurableInfo("If On Incapacitated Big Spiders will move themselves away whenever they are touched fron behind or the side, if 'Spider Jump' is on some Spiders will jump away. This will move the Spider. (Default = false)", null, "", new object[1] { "Collide" }));
+        spid_attack = config.Bind("spid_attack", false, new ConfigurableInfo("If On Incapacitated Big Spiders will attempt to bite prey near them, if 'Spider Jump' is on the Spider will leap towards the prey. (Default = false)", null, "", new object[1] { "Attack" }));
+        spid_jump = config.Bind("spid_jump", false, new ConfigurableInfo("If On Incapacitated Big Spiders will be capable of jumping if other spider settings that include jumping are On. This will move the Spider. (Default = false)", null, "", new object[1] { "Jump" }));
+        spid_dodge = config.Bind("spid_dodge", false, new ConfigurableInfo("If this and 'Spider Jump' are On Incapacitated Big Spiders will attempt to dodge flying weapons by Jumping. This will move the Spider. (Default = false)", null, "", new object[1] { "Dodge" }));
+        #endregion
+
         #region Cicada
         cic_state = config.Bind("cic_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Cicada"));
 
-        cic_eat = config.Bind("cic_eat", true, new ConfigurableInfo("If On Incapacitated Cicadas will grab and hold any valid edibles. (Default = true)", null, "", new object[1] { "Cicada Eat" }));
-        cic_attack = config.Bind("cic_attack", false, new ConfigurableInfo("If On Incapacitated Cicadas will sometimes try to Bump Creatures, this will move the Cicada. (Default = false)", null, "", new object[1] { "Cicada Bump" }));
+        cic_eat = config.Bind("cic_eat", false, new ConfigurableInfo("If On Incapacitated Cicadas will grab and hold any valid edibles. (Default = false)", null, "", new object[1] { "Eat" }));
+        cic_attack = config.Bind("cic_attack", false, new ConfigurableInfo("If On Incapacitated Cicadas will sometimes try to Bump Creatures, this will move the Cicada. (Default = false)", null, "", new object[1] { "Bump" }));
         #endregion
 
         #region Lizard
         liz_state = config.Bind("liz_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Lizard"));
 
-        liz_spit = config.Bind("liz_spit", false, new ConfigurableInfo("(Default = false)", null, "", new object[1] { "Lizard Spit" }));
-        liz_blizzard = config.Bind("liz_blizzard", false, new ConfigurableInfo("(Default = false)", null, "", new object[1] { "Blizzard Lizard Ability" }));
-        liz_rot = config.Bind("liz_rot", true, new ConfigurableInfo("(Default = false)", null, "", new object[1] { "Rot Lizard Ability" }));
-        liz_jump = config.Bind("liz_jump", true, new ConfigurableInfo("(Default = false)", null, "", new object[1] { "Jump Lizard Ability" }));
+        liz_spit = config.Bind("liz_spit", false, new ConfigurableInfo("(Default = false)", null, "", new object[1] { "Spit" }));
+        liz_blizzard = config.Bind("liz_blizzard", false, new ConfigurableInfo("(Default = false)", null, "", new object[1] { "Blizzard Ability" }));
+        liz_rot = config.Bind("liz_rot", false, new ConfigurableInfo("(Default = false)", null, "", new object[1] { "Rot Ability" }));
+        liz_jump = config.Bind("liz_jump", false, new ConfigurableInfo("(Default = false)", null, "", new object[1] { "Jump Ability" }));
 
-        liz_attack = config.Bind("liz_attack", true, new ConfigurableInfo("If On Incapacitated Lizards will attempt to bite prey near them. The bites will never actually damage anything (Default = true)", null, "", new object[1] { "Lizard Attempt Bite" }));
-        liz_attack_move = config.Bind("liz_attack_move", false, new ConfigurableInfo("If On and Lizard Attempt Bite is On Incapacitated Lizards will Lunge whenever appropierate, this will move the Lizard. (Default = false)", null, "", new object[1] { "Lizard Lunge" }));
-        liz_voice = config.Bind("liz_voice", true, new ConfigurableInfo("If On Incapacitated Lizards will make sounds such as pain and fear. These sounds can be heard by other creatures in the game. (Default = true)", null, "", new object[1] { "Lizard Voice" }));
-        liz_fear_move = config.Bind("liz_fear_move", false, new ConfigurableInfo("If On Incapacitated Lizards will attempt to scoot away from their predators. (Default = false)", null, "", new object[1] { "Lizard Fear Movement" }));
+        liz_attack = config.Bind("liz_attack", false, new ConfigurableInfo("If On Incapacitated Lizards will attempt to bite prey near them. The bites will never actually damage anything (Default = false)", null, "", new object[1] { "Attempt Bite" }));
+        liz_attack_move = config.Bind("liz_attack_move", false, new ConfigurableInfo("If On and Lizard Attempt Bite is On Incapacitated Lizards will Lunge whenever appropierate, this will move the Lizard. (Default = false)", null, "", new object[1] { "Lunge" }));
+        liz_voice = config.Bind("liz_voice", false, new ConfigurableInfo("If On Incapacitated Lizards will make sounds such as pain and fear. These sounds can be heard by other creatures in the game. (Default = false)", null, "", new object[1] { "Voice" }));
+        liz_fear_move = config.Bind("liz_fear_move", false, new ConfigurableInfo("If On Incapacitated Lizards will attempt to scoot away from their predators. (Default = false)", null, "", new object[1] { "Fear Movement" }));
+        liz_friend = config.Bind("liz_friend", false, new ConfigurableInfo("If this and 'Den Revive' are On Lizards that have been Revived by the players den will always be tamed. (Default = false)", null, "", new object[1] { "Den Tame" }));
         #endregion
 
         #region Vulture
         vul_state = config.Bind("vul_state", "Incapacitation and Cheating Death", new ConfigurableInfo("Vulture"));
 
-        vul_attack = config.Bind("vul_attack", true, new ConfigurableInfo("If On Incapacitated Vultures will attempt to bite prey near them. The bites will never actually damage anything (Default = true)", null, "", new object[1] { "Vulture Attempt Bite" }));
-        vul_attack_move = config.Bind("vul_attack_move", false, new ConfigurableInfo("If On and Vulture Attempt Bite is On Incapacitated Vultures will slightly move themselves forward during bites, this will move the Vulture. (Default = false)", null, "", new object[1] { "Vulture Lunge" }));
+        vul_attack = config.Bind("vul_attack", false, new ConfigurableInfo("If On Incapacitated Vultures will attempt to bite prey near them. The bites will never actually damage anything (Default = false)", null, "", new object[1] { "Attempt Bite" }));
+        vul_attack_move = config.Bind("vul_attack_move", false, new ConfigurableInfo("If On and Vulture Attempt Bite is On Incapacitated Vultures will slightly move themselves forward during bites, this will move the Vulture. (Default = false)", null, "", new object[1] { "Lunge" }));
         #endregion
 
         #region SlugPup
@@ -83,6 +96,8 @@ public class ShadowOfOptions : OptionInterface
 
         #region Scavenger
         scav_state = config.Bind("scav_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Scavenger"));
+
+        scav_back_spear = config.Bind("scav_back_spear", false, new ConfigurableInfo("If On Scavengers will not drop any items that are attacked to them (such as back-spears) when they are Incapacitated or Unconscious. (Default = false)", null, "", new object[1] { "Drop Items" }));
         #endregion
         #endregion
         #endregion
@@ -114,7 +129,7 @@ public class ShadowOfOptions : OptionInterface
     public override void Initialize()
     {
         base.Initialize();
-        Tabs = new OpTab[2];
+        Tabs = new OpTab[3];
 
         #region Main Options
         Tabs[0] = new OpTab(this, "Main Options");
@@ -156,6 +171,7 @@ public class ShadowOfOptions : OptionInterface
         AddNewLine();
         AddBox();
         AddCheckBox(cheat_death, (string)cheat_death.info.Tags[0]);
+        AddCheckBox(den_revive, (string)den_revive.info.Tags[0]);
         AddCheckBox(blunt_uncon_guaranteed, (string)blunt_uncon_guaranteed.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[0]);
 
@@ -167,11 +183,27 @@ public class ShadowOfOptions : OptionInterface
         DrawBox(ref Tabs[0]);
         #endregion
 
-        #region Creatures
-        Tabs[1] = new OpTab(this, "Creatures");
+        #region Base Game Creatures 1
+        Tabs[1] = new OpTab(this, " Base Creatures 1");
         InitializeMarginAndPos();
 
-        //AddNewLine();
+        #region BigSpider
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[1], spid_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(spid_mother, (string)spid_mother.info.Tags[0]);
+        AddCheckBox(spid_cling, (string)spid_cling.info.Tags[0]);
+        AddCheckBox(spid_collide, (string)spid_collide.info.Tags[0]);
+        AddCheckBox(spid_attack, (string)spid_attack.info.Tags[0]);
+        AddCheckBox(spid_jump, (string)spid_jump.info.Tags[0]);
+        AddCheckBox(spid_dodge, (string)spid_dodge.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[1]);
+        DrawBox(ref Tabs[1]);
+        #endregion
+
+        #region Cicada
+        AddNewLine();
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[1], cic_state, new List<string>{ "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
@@ -180,19 +212,24 @@ public class ShadowOfOptions : OptionInterface
         AddCheckBox(cic_attack, (string)cic_attack.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[1]);
         DrawBox(ref Tabs[1]);
+        #endregion
 
+        #region Lizard
         AddNewLine();
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[1], liz_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
         AddNewLine();
         AddCheckBox(liz_attack, (string)liz_attack.info.Tags[0]);
-        AddCheckBox(liz_attack_move, (string)liz_attack.info.Tags[0]);
+        AddCheckBox(liz_attack_move, (string)liz_attack_move.info.Tags[0]);
         AddCheckBox(liz_voice, (string)liz_voice.info.Tags[0]);
         AddCheckBox(liz_fear_move, (string)liz_fear_move.info.Tags[0]);
+        AddCheckBox(liz_friend, (string)liz_friend.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[1]);
         DrawBox(ref Tabs[1]);
+        #endregion
 
+        #region Slugcat
         AddNewLine();
         AddBox();
         AddNewLine();
@@ -203,22 +240,30 @@ public class ShadowOfOptions : OptionInterface
         AddCheckBox(slugpup_never_die, (string)slugpup_never_die.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[1]);
         DrawBox(ref Tabs[1]);
+        #endregion
+        #endregion
 
-        AddNewLine();
+        #region Base Game Creatures 2
+        Tabs[2] = new OpTab(this, "Base Creatures 2");
+        InitializeMarginAndPos();
+
         AddBox();
         AddNewLine();
-        DrawComboBox(ref Tabs[1], vul_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death"});
+        DrawComboBox(ref Tabs[2], vul_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death" });
         AddNewLine();
         AddCheckBox(vul_attack, (string)vul_attack.info.Tags[0]);
         AddCheckBox(vul_attack_move, (string)vul_attack_move.info.Tags[0]);
-        DrawCheckBoxes(ref Tabs[1]);
-        DrawBox(ref Tabs[1]);
+        DrawCheckBoxes(ref Tabs[2]);
+        DrawBox(ref Tabs[2]);
 
         AddNewLine();
         AddBox();
         AddNewLine();
-        DrawComboBox(ref Tabs[1], scav_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
-        DrawBox(ref Tabs[1]);
+        DrawComboBox(ref Tabs[2], scav_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(scav_back_spear, (string)scav_back_spear.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[2]);
+        DrawBox(ref Tabs[2]);
         #endregion
     }
 
@@ -929,12 +974,24 @@ public class ShadowOfOptions : OptionInterface
     #endregion
 
     public static Configurable<bool> cheat_death;
+    public static Configurable<bool> den_revive;
 
     public static Configurable<bool> blunt_uncon_guaranteed;
     #endregion
 
     #region Creatures
     #region Base Game
+    #region BigSpider
+    public static Configurable<string> spid_state;
+
+    public static Configurable<bool> spid_mother;
+    public static Configurable<bool> spid_cling;
+    public static Configurable<bool> spid_collide;
+    public static Configurable<bool> spid_attack;
+    public static Configurable<bool> spid_jump;
+    public static Configurable<bool> spid_dodge;
+    #endregion
+
     #region Cicada
     public static Configurable<string> cic_state;
 
@@ -954,6 +1011,7 @@ public class ShadowOfOptions : OptionInterface
 
     public static Configurable<bool> liz_voice;
     public static Configurable<bool> liz_fear_move;
+    public static Configurable<bool> liz_friend;
     #endregion
 
     #region Vulture
@@ -973,6 +1031,8 @@ public class ShadowOfOptions : OptionInterface
 
     #region Scav
     public static Configurable<string> scav_state;
+
+    public static Configurable<bool> scav_back_spear;
     #endregion
     #endregion
     #endregion

@@ -34,6 +34,10 @@ public class Incapacitation : BaseUnityPlugin
         public int cheatDeathChance = 0;
 
         public bool returnToDen = false;
+
+        public bool spiderMotherWasDead = false;
+
+        public bool forceTame = false;
     }
 
     public class BreathData
@@ -201,7 +205,19 @@ public class Incapacitation : BaseUnityPlugin
     }
     public static bool IsComa(Creature self)
     {
-        return self.dead && inconstorage.TryGetValue(self.abstractCreature, out InconData data) && data.isAlive;
+        return self.dead && inconstorage.TryGetValue(self.abstractCreature, out InconData data) && (data.isAlive || CanIBeRevived());
+
+        bool CanIBeRevived()
+        {
+            if (self.abstractCreature.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider)
+            {
+                BigSpider spid = self as BigSpider;
+
+                return !spid.mother && spid.State.health > -8f && spid.State.meatLeft > 0 && spid.poison < 0.2f && spid.lungs > 0f;
+            }
+
+            return false;
+        }
     }
     public static bool IsUncon(Creature self)
     {
@@ -234,7 +250,7 @@ public class Incapacitation : BaseUnityPlugin
 
         int chance = UnityEngine.Random.Range(0, 100);
 
-        Debug.Log(killType);
+        //Debug.Log(killType);
 
         int unconChance;
         int inconChance;
@@ -339,7 +355,8 @@ public class Incapacitation : BaseUnityPlugin
             (self.creatureTemplate.type == CreatureTemplate.Type.Slugcat || self.creatureTemplate.type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC) && ShadowOfOptions.slug_state.Value != "Disabled" || 
             (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.CicadaA && ShadowOfOptions.cic_state.Value != "Disabled" ||
-            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && ShadowOfOptions.scav_state.Value != "Disabled"))
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && ShadowOfOptions.scav_state.Value != "Disabled" ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider && ShadowOfOptions.spid_state.Value != "Disabled"))
         {
             return true;
         }
@@ -349,10 +366,11 @@ public class Incapacitation : BaseUnityPlugin
 
     public static bool IsAbstractCreatureDenRespawnValid(AbstractCreature self)
     {
-        if (self != null && (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LizardTemplate && ShadowOfOptions.liz_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
+        if (self != null && ShadowOfOptions.den_revive.Value && (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LizardTemplate && ShadowOfOptions.liz_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
             self.creatureTemplate.type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC && ShadowOfOptions.slug_state.Value == "Incapacitation and Den Revive" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.CicadaA && ShadowOfOptions.cic_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
-            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && (!ModManager.MSC || self.creatureTemplate.type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.ScavengerKing) && ShadowOfOptions.scav_state.Value == "Incapacitation, Cheating Death and Den Revive"))
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && (!ModManager.MSC || self.creatureTemplate.type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.ScavengerKing) && ShadowOfOptions.scav_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider && ShadowOfOptions.spid_state.Value == "Incapacitation, Cheating Death and Den Revive"))
         {
             return true;
         }
@@ -362,10 +380,11 @@ public class Incapacitation : BaseUnityPlugin
 
     public static bool IsAbstractCreatureCheatDeathValid(AbstractCreature self)
     {
-        if (self != null && (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LizardTemplate && ShadowOfOptions.liz_state.Value != "Disabled" && ShadowOfOptions.liz_state.Value != "Incapacitation Only" ||
+        if (self != null && ShadowOfOptions.cheat_death.Value && (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LizardTemplate && ShadowOfOptions.liz_state.Value != "Disabled" && ShadowOfOptions.liz_state.Value != "Incapacitation Only" ||
             (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Disabled" && ShadowOfOptions.vul_state.Value != "Incapacitation Only" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.CicadaA && ShadowOfOptions.cic_state.Value != "Disabled" && ShadowOfOptions.cic_state.Value != "Incapacitation Only" ||
-            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && (!ModManager.MSC || self.creatureTemplate.type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.ScavengerKing) && ShadowOfOptions.scav_state.Value != "Disabled" && ShadowOfOptions.scav_state.Value != "Incapacitation Only"))
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && (!ModManager.MSC || self.creatureTemplate.type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.ScavengerKing) && ShadowOfOptions.scav_state.Value != "Disabled" && ShadowOfOptions.scav_state.Value != "Incapacitation Only" ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider && ShadowOfOptions.spid_state.Value != "Disabled" && ShadowOfOptions.spid_state.Value != "Incapacitation Only"))
         {
             return true;
         }

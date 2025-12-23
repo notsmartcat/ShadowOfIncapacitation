@@ -20,8 +20,22 @@ internal class Hooks
 
         On.ScavengerGraphics.DrawSprites += ScavengerGraphicsDrawSprites;
 
+        On.Creature.LoseAllGrasps += CreatureLoseAllGrasps;
+
         new Hook(
             typeof(Scavenger).GetProperty(nameof(Scavenger.HeadLookPoint)).GetGetMethod(), ShadowOfScavengerHeadLookPoint);
+    }
+
+    static void CreatureLoseAllGrasps(On.Creature.orig_LoseAllGrasps orig, Creature self)
+    {
+        if (!ShadowOfOptions.scav_back_spear.Value || self.abstractCreature.creatureTemplate.TopAncestor().type != CreatureTemplate.Type.Scavenger || !inconstorage.TryGetValue(self.abstractCreature, out InconData data) || !IsComa(self))
+        {
+            orig(self);
+
+            return;
+        }
+
+        self.ReleaseGrasp(0);
     }
 
     public static Vector2 ShadowOfScavengerHeadLookPoint(Func<Scavenger, Vector2> orig, Scavenger self)
@@ -125,7 +139,7 @@ internal class Hooks
 
         if (standup)
         {
-            self.WeightedPush(0, 1, new Vector2(0f, 1f), Custom.LerpMap(Vector2.Dot((self.bodyChunks[0].pos - self.bodyChunks[1].pos).normalized, new Vector2(0f, 1f)), -1f, 1f, 5.5f, 0.3f) * (1f - self.LittleStuck) * Mathf.Lerp(1f, 0.1f, Mathf.Pow(self.Injured, 2f)));
+            self.WeightedPush(0, 1, new Vector2(0f, 1f), Custom.LerpMap(Vector2.Dot((self.bodyChunks[0].pos - self.bodyChunks[1].pos).normalized, new Vector2(0f, 1f)), -1f, 1f, 5.5f, 0.3f) * (1f - self.LittleStuck) * Mathf.Lerp(1f, 0.1f, Mathf.Pow(0, 2f)));
         }
         self.WeightedPush(0, 1, self.HeadLookDir, 0.05f * (1f - self.LittleStuck));
         Vector2 a = self.mainBodyChunk.pos + self.HeadLookDir * self.bodyChunkConnections[1].distance * (self.Pointing ? 0.4f : 1f);
@@ -201,7 +215,6 @@ internal class Hooks
             {
                 self.moveModeChangeCounter = 0;
             }
-
 
             if (self.movMode != Scavenger.MovementMode.Swim)
             {
@@ -293,7 +306,7 @@ internal class Hooks
                 }
             }
             ai.arrangeInventoryCounter--;
-            if (ai.arrangeInventoryCounter < 0)
+            if (false && ai.arrangeInventoryCounter < 0)
             {
                 bool flag = ai.scavenger.ArrangeInventory();
                 ai.arrangeInventoryCounter = UnityEngine.Random.Range(10, (!ai.scavenger.moving || flag) ? 20 : 400);
@@ -326,13 +339,31 @@ internal class Hooks
                 }
             }
             float num = 0f;
-            ai.UpdateCurrentViolenceType();
+            //ai.UpdateCurrentViolenceType();
             if (ai.behavior == ScavengerAI.Behavior.Idle)
             {
                 num = ai.discomfortWithOtherCreatures * 0.5f;
                 ai.runSpeedGoal = ai.creature.personality.energy * 0.3f + ai.creature.personality.nervous * 0.7f;
                 ai.runSpeedGoal = Mathf.Lerp(ai.runSpeedGoal, 1f, ai.discomfortWithOtherCreatures * 0.5f);
-                ai.IdleBehavior();
+
+                ai.discomfortWithOtherCreatures = ai.discomfortTracker.DiscomfortOfTile(ai.scavenger.room.GetWorldCoordinate(ai.scavenger.occupyTile));
+                ai.idleCounter--;
+                if (!ai.scavenger.moving && !ai.scavenger.Rummaging)
+                {
+                    ai.idleCounter -= 3;
+                }
+                if (ai.scavenger.ReallyStuck > 1f)
+                {
+                    ai.idleCounter = Mathf.Min(ai.idleCounter, 10);
+                }
+                if (ai.idleCounter < 1)
+                {
+                    ai.idleCounter = UnityEngine.Random.Range(100, 200 + (int)(1900f * (1f - ai.creature.personality.nervous))) * 4;
+                }
+                if (!ai.scavenger.moving && ai.idleCounter > (ai.scavenger.Elite ? 300 : 100) && ai.scavenger.animation == null && Scavenger.RummageAnimation.RummagePossible(ai.scavenger))
+                {
+                    ai.scavenger.animation = new Scavenger.RummageAnimation(ai.scavenger);
+                }
             }
             else if (ai.behavior == ScavengerAI.Behavior.Flee || ai.behavior == ScavengerAI.Behavior.Attack)
             {

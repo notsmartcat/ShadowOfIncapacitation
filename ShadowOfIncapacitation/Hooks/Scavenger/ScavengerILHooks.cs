@@ -188,6 +188,8 @@ internal class ILHooks
             x => x.MatchBgeUn(out target),
         }))
         {
+            val.MoveAfterLabels();
+
             val.Emit(OpCodes.Ldarg_0);
             val.EmitDelegate(IsInconBase);
             val.Emit(OpCodes.Brtrue_S, target);

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 
 using static Incapacitation.Incapacitation;
+using Mono.Cecil;
 
 namespace Incapacitation;
 
@@ -54,7 +55,7 @@ internal class MiscHooks
 
     static void CreatureDie(On.Creature.orig_Die orig, Creature self)
     {
-        if (!inconstorage.TryGetValue(self.abstractCreature, out InconData data) || !data.isAlive || (shadowOfLizardsCheck && HasLizardData()) || self.abstractCreature.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Slugcat || ModManager.MSC && (self.abstractCreature.creatureTemplate.TopAncestor().type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC || self.abstractCreature.creatureTemplate.type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.ScavengerKing))
+        if (!ShadowOfOptions.cheat_death.Value || !inconstorage.TryGetValue(self.abstractCreature, out InconData data) || (shadowOfLizardsCheck && HasLizardData()))
         {
             orig(self);
             return;
@@ -62,6 +63,25 @@ internal class MiscHooks
 
         try
         {
+            if (!data.isAlive && ModManager.DLCShared && self is BigSpider spid && spid.mother && ShadowOfOptions.spid_mother.Value && ShadowOfOptions.spid_state.Value != "Disabled")
+            {
+                if (!spid.spewBabies)
+                {
+                    data.spiderMotherWasDead = true;
+                    spid.BabyPuff();
+                }
+                else
+                {
+                    data.spiderMotherWasDead = false;
+                }
+            }
+
+            if (data.actuallyDead)
+            {
+                orig(self);
+                return;
+            }
+
             if (!self.dead)
             {
                 //ViolenceCheck(self, data, data.lastDamageType);
@@ -120,7 +140,6 @@ internal class MiscHooks
 
                     if (self.abstractCreature.state != null)
                         self.abstractCreature.state.alive = false;
-
 
                     if (ShadowOfOptions.debug_logs.Value)
                         Debug.Log(all + self + " is Unconsious, it will survive the cycle");
@@ -345,14 +364,20 @@ internal class MiscHooks
                         data.actuallyDead = true;
                         data.isAlive = false;
                     }
-                    if (self.creature.Room != null && self.creature.Room.shelter && self.creature.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Slugcat && self.creature.creatureTemplate.TopAncestor().type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC && (self.creature.abstractAI == null || self.creature.abstractAI.RealAI == null || self.creature.abstractAI.RealAI.friendTracker == null || self.creature.abstractAI.RealAI.friendTracker.friend == null))
+                    if (self.creature.Room != null && self.creature.Room.shelter)
                     {
                         data.returnToDen = true;
 
                         self.alive = true;
+                        data.actuallyDead = false;
 
                         if (ShadowOfOptions.debug_logs.Value)
                             Debug.Log(all + self.creature + " Is forced alive and told to return to den");
+
+                        if (ShadowOfOptions.liz_friend.Value && self.creature.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LizardTemplate)
+                        {
+                            data.forceTame = true;
+                        }
                     }
                 }
 

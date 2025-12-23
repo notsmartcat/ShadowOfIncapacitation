@@ -22,8 +22,6 @@ internal class ForceDieHooks
 
         On.Creature.HypothermiaUpdate += CreatureHypothermiaUpdate;
 
-        On.BigSpider.BabyPuff += BigSpiderBabyPuff;
-
         On.Fly.Update += FlyUpdate;
 
         On.InsectoidCreature.Update += InsectoidCreatureUpdate;
@@ -288,15 +286,5 @@ internal class ForceDieHooks
         {
             ActuallyKill(self);
         }
-    }
-
-    static void BigSpiderBabyPuff(On.BigSpider.orig_BabyPuff orig, BigSpider self)
-    {
-        if (inconstorage.TryGetValue(self.abstractCreature, out _) && self.mother)
-        {
-            ActuallyKill(self);
-        }
-
-        orig(self);
     }
 }

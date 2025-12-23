@@ -24,6 +24,8 @@ internal class Hooks
 
         On.LizardAI.LizardInjuryTracker.Utility += LizardInjuryTrackerUtility;
 
+        On.Lizard.ctor += NewLizard;
+
         new Hook(
             typeof(LizardLimb).GetProperty(nameof(LizardLimb.health)).GetGetMethod(),
             typeof(Hooks).GetMethod(nameof(LizardLimbHealth)));
@@ -33,9 +35,35 @@ internal class Hooks
             typeof(Hooks).GetMethod(nameof(LizardIsWallClimber)));
     }
 
+    static void NewLizard(On.Lizard.orig_ctor orig, Lizard self, AbstractCreature abstractCreature, World world)
+    {
+        orig(self, abstractCreature, world);
+
+        if (!inconstorage.TryGetValue(abstractCreature, out InconData data) || !data.forceTame)
+        {
+            return;
+        }
+
+        data.forceTame = false;
+
+        if (ShadowOfOptions.debug_logs.Value)
+            Debug.Log(all + self + " attempting to force friendship");
+
+        for (int j = 0; j < abstractCreature.world.game.Players.Count; j++)
+        {
+            SocialMemory.Relationship relationship = abstractCreature.state.socialMemory.GetRelationship(abstractCreature.world.game.Players[j].ID);
+
+            relationship.like = 1f;
+            relationship.tempLike = 1f;
+
+            if (ShadowOfOptions.debug_logs.Value)
+                Debug.Log(all + self + " and " + abstractCreature.world.game.Players[j] + " are now friends!");
+        }
+    }
+
     static bool LizardAIWantToStayInDenUntilEndOfCycle(On.LizardAI.orig_WantToStayInDenUntilEndOfCycle orig, LizardAI self)
     {
-        if (!inconstorage.TryGetValue(self.lizard.abstractCreature, out InconData data) || data.returnToDen == false)
+        if (!inconstorage.TryGetValue(self.lizard.abstractCreature, out InconData data) || !data.returnToDen)
         {
             return orig(self);
         }
@@ -84,7 +112,7 @@ internal class Hooks
         {
             if (IsIncon(self) && inconstorage.TryGetValue(self.abstractCreature, out InconData data))
             {
-                return ModManager.MMF && self.room != null && self.room.gravity <= Lizard.zeroGravityMovementThreshold;
+                return ModManager.MMF && self.room != null && self.room.gravity <= global::Lizard.zeroGravityMovementThreshold;
             }
         }
         catch (Exception e) { Incapacitation.Logger.LogError(e); }
@@ -198,7 +226,7 @@ internal class Hooks
             self.timeInAnimation++;
             if (self.timeToRemainInAnimation > -1 && self.timeInAnimation > self.timeToRemainInAnimation)
             {
-                self.EnterAnimation(Lizard.Animation.Standard, true);
+                self.EnterAnimation(global::Lizard.Animation.Standard, true);
             }
             if (self.bubble == 0 && UnityEngine.Random.value < 0.05f && UnityEngine.Random.value < ai.excitement && UnityEngine.Random.value < ai.excitement)
             {
@@ -275,7 +303,7 @@ internal class Hooks
                     if (UnityEngine.Random.value < 0.05f && ai.threatTracker.mostThreateningCreature != null && ai.threatTracker.mostThreateningCreature.BestGuessForPosition().Tile.FloatDist(ai.creature.pos.Tile) < 15f)
                     {
                         InconAct(data);
-                        self.EnterAnimation(Lizard.Animation.ThreatSpotted, false);
+                        self.EnterAnimation(global::Lizard.Animation.ThreatSpotted, false);
                     }
                 }
                 ai.runSpeed = Mathf.Lerp(ai.runSpeed, Mathf.Pow(ai.CombinedFear, 0.1f), 0.5f);
@@ -400,7 +428,7 @@ internal class Hooks
                 if (UnityEngine.Random.value < 0.0125f)
                 {
                     InconAct(data);
-                    self.EnterAnimation(Lizard.Animation.PreyReSpotted, false);
+                    self.EnterAnimation(global::Lizard.Animation.PreyReSpotted, false);
                 }
                 if (UnityEngine.Random.value < 0.0125f)
                 {
@@ -457,7 +485,7 @@ internal class Hooks
             if (ShadowOfOptions.liz_spit.Value && (self.Template.type == CreatureTemplate.Type.RedLizard || (ModManager.DLCShared && self.Template.type == DLCSharedEnums.CreatureTemplateType.SpitLizard)) && ai.redSpitAI.spitting)
             {
                 InconAct(data);
-                self.EnterAnimation(Lizard.Animation.Spit, false);
+                self.EnterAnimation(global::Lizard.Animation.Spit, false);
             }
             if (ShadowOfOptions.liz_blizzard.Value && self.blizzardModule != null)
             {
