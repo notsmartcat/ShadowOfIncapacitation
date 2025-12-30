@@ -356,7 +356,8 @@ public class Incapacitation : BaseUnityPlugin
             (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.CicadaA && ShadowOfOptions.cic_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && ShadowOfOptions.scav_state.Value != "Disabled" ||
-            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider && ShadowOfOptions.spid_state.Value != "Disabled"))
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider && ShadowOfOptions.spid_state.Value != "Disabled" ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Centipede && ShadowOfOptions.centi_state.Value != "Disabled"))
         {
             return true;
         }
@@ -370,7 +371,8 @@ public class Incapacitation : BaseUnityPlugin
             self.creatureTemplate.type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC && ShadowOfOptions.slug_state.Value == "Incapacitation and Den Revive" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.CicadaA && ShadowOfOptions.cic_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && (!ModManager.MSC || self.creatureTemplate.type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.ScavengerKing) && ShadowOfOptions.scav_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
-            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider && ShadowOfOptions.spid_state.Value == "Incapacitation, Cheating Death and Den Revive"))
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider && ShadowOfOptions.spid_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Centipede && ShadowOfOptions.centi_state.Value == "Incapacitation, Cheating Death and Den Revive"))
         {
             return true;
         }
@@ -384,7 +386,8 @@ public class Incapacitation : BaseUnityPlugin
             (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Disabled" && ShadowOfOptions.vul_state.Value != "Incapacitation Only" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.CicadaA && ShadowOfOptions.cic_state.Value != "Disabled" && ShadowOfOptions.cic_state.Value != "Incapacitation Only" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && (!ModManager.MSC || self.creatureTemplate.type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.ScavengerKing) && ShadowOfOptions.scav_state.Value != "Disabled" && ShadowOfOptions.scav_state.Value != "Incapacitation Only" ||
-            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider && ShadowOfOptions.spid_state.Value != "Disabled" && ShadowOfOptions.spid_state.Value != "Incapacitation Only"))
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider && ShadowOfOptions.spid_state.Value != "Disabled" && ShadowOfOptions.spid_state.Value != "Incapacitation Only" ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Centipede && ShadowOfOptions.centi_state.Value != "Disabled" && ShadowOfOptions.centi_state.Value != "Incapacitation Only"))
         {
             return true;
         }

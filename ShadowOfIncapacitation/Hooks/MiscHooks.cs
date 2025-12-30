@@ -613,6 +613,10 @@ internal class MiscHooks
             {
                 return hitChunk.index == 2;
             }
+            else if (self is Centipede)
+            {
+                return hitChunk.index == 0 || hitChunk.index == self.bodyChunks.Length - 1;
+            }
 
             return hitChunk.index == 0;
         }

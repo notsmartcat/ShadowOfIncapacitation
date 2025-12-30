@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System;
-
+using UnityEngine;
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation;
@@ -470,25 +470,48 @@ internal class ILHooksMisc
             return;
         }
 
+        if (self is Centipede centi)
+        {
+            centi.shockCharge *= 0.5f;
+        }
+
         int chance = UnityEngine.Random.Range(0, 101);
 
-        if (IsIncon(self))
+        if (IsInconBase(self))
         {
-            if (chance < 25)
+            if (chance <= 25)
             {
+                if(ShadowOfOptions.debug_logs.Value)
+                    Debug.Log(all + self + " Success! " + chance + "/25 for Dying after being bit");
+
                 ActuallyKill(self);
+                return;
             }
-            else if (chance < 50)
+            else if (chance <= 50)
             {
+                if (ShadowOfOptions.debug_logs.Value)
+                    Debug.Log(all + self + " Success! " + chance + "/50 for Unconscious after being bit");
+
                 data.isUncon = true;
+                return;
             }
+
+            if (ShadowOfOptions.debug_logs.Value)
+                Debug.Log(all + self + " Failure! " + chance + "/50 for Death or Unconscious after being bit");
         }
         else
         {
-            if (chance < 25)
+            if (chance <= 50)
             {
+                if (ShadowOfOptions.debug_logs.Value)
+                    Debug.Log(all + self + " Success! " + chance + "/50 for Dying after being bit");
+
                 ActuallyKill(self);
+                return;
             }
+
+            if (ShadowOfOptions.debug_logs.Value)
+                Debug.Log(all + self + " Failure! " + chance + "/50 for Death after being bit");
         }
     }
 

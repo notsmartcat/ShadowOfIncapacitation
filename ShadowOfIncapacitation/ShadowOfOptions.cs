@@ -57,6 +57,13 @@ public class ShadowOfOptions : OptionInterface
         spid_dodge = config.Bind("spid_dodge", false, new ConfigurableInfo("If this and 'Spider Jump' are On Incapacitated Big Spiders will attempt to dodge flying weapons by Jumping. This will move the Spider. (Default = false)", null, "", new object[1] { "Dodge" }));
         #endregion
 
+        #region Centipede
+        centi_state = config.Bind("centi_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Centipede"));
+
+        centi_shock = config.Bind("centi_shock", false, new ConfigurableInfo("If On Incapacitated baby Centipedes will shock anything that holds them. (Default = false)", null, "", new object[1] { "Baby Shock" }));
+        centi_grab = config.Bind("centi_grab", false, new ConfigurableInfo("If On Incapacitated Centipedes will attempt to grab onto prey, the Centipedes are incapable of Shocking. (Default = false)", null, "", new object[1] { "Grab" }));
+        #endregion
+
         #region Cicada
         cic_state = config.Bind("cic_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Cicada"));
 
@@ -202,6 +209,18 @@ public class ShadowOfOptions : OptionInterface
         DrawBox(ref Tabs[1]);
         #endregion
 
+        #region Centipede
+        AddNewLine();
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[1], centi_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(centi_shock, (string)centi_shock.info.Tags[0]);
+        AddCheckBox(centi_grab, (string)centi_grab.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[1]);
+        DrawBox(ref Tabs[1]);
+        #endregion
+
         #region Cicada
         AddNewLine();
         AddBox();
@@ -228,25 +247,26 @@ public class ShadowOfOptions : OptionInterface
         DrawCheckBoxes(ref Tabs[1]);
         DrawBox(ref Tabs[1]);
         #endregion
-
-        #region Slugcat
-        AddNewLine();
-        AddBox();
-        AddNewLine();
-        DrawComboBox(ref Tabs[1], slug_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Den Revive" });
-        AddNewLine();
-        AddCheckBox(incon_slugplayer, (string)incon_slugplayer.info.Tags[0]);
-        AddCheckBox(incon_slugpup, (string)incon_slugpup.info.Tags[0]);
-        AddCheckBox(slugpup_never_die, (string)slugpup_never_die.info.Tags[0]);
-        DrawCheckBoxes(ref Tabs[1]);
-        DrawBox(ref Tabs[1]);
-        #endregion
         #endregion
 
         #region Base Game Creatures 2
         Tabs[2] = new OpTab(this, "Base Creatures 2");
         InitializeMarginAndPos();
 
+        #region Slugcat
+        AddNewLine();
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[2], slug_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Den Revive" });
+        AddNewLine();
+        AddCheckBox(incon_slugplayer, (string)incon_slugplayer.info.Tags[0]);
+        AddCheckBox(incon_slugpup, (string)incon_slugpup.info.Tags[0]);
+        AddCheckBox(slugpup_never_die, (string)slugpup_never_die.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[2]);
+        DrawBox(ref Tabs[2]);
+        #endregion
+
+        #region Vulture
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[2], vul_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death" });
@@ -255,7 +275,9 @@ public class ShadowOfOptions : OptionInterface
         AddCheckBox(vul_attack_move, (string)vul_attack_move.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[2]);
         DrawBox(ref Tabs[2]);
+        #endregion
 
+        #region Scavenger
         AddNewLine();
         AddBox();
         AddNewLine();
@@ -264,6 +286,7 @@ public class ShadowOfOptions : OptionInterface
         AddCheckBox(scav_back_spear, (string)scav_back_spear.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[2]);
         DrawBox(ref Tabs[2]);
+        #endregion
         #endregion
     }
 
@@ -990,6 +1013,13 @@ public class ShadowOfOptions : OptionInterface
     public static Configurable<bool> spid_attack;
     public static Configurable<bool> spid_jump;
     public static Configurable<bool> spid_dodge;
+    #endregion
+
+    #region Centipede
+    public static Configurable<string> centi_state;
+
+    public static Configurable<bool> centi_shock;
+    public static Configurable<bool> centi_grab;
     #endregion
 
     #region Cicada
