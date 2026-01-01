@@ -530,6 +530,11 @@ internal class MiscHooks
             if (ShadowOfOptions.debug_logs.Value)
                 Debug.Log(all + self + " was knocked Uncontious");
         }
+
+        if (IsIncon(self))
+        {
+            InconAct(data);
+        }
         
         int UnconChance()
         {

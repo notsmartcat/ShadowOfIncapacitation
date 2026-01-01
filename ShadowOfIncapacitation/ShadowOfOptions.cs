@@ -71,6 +71,12 @@ public class ShadowOfOptions : OptionInterface
         cic_attack = config.Bind("cic_attack", false, new ConfigurableInfo("If On Incapacitated Cicadas will sometimes try to Bump Creatures, this will move the Cicada. (Default = false)", null, "", new object[1] { "Bump" }));
         #endregion
 
+        #region Deer
+        deer_state = config.Bind("deer_state", "Incapacitation and Cheating Death", new ConfigurableInfo("Deer"));
+
+        deer_eat = config.Bind("deer_eat", false, new ConfigurableInfo("If On Incapacitated Deer will eat Puffballs that are close enoug to them. (Default = false)", null, "", new object[1] { "Eat" }));
+        #endregion
+
         #region Lizard
         liz_state = config.Bind("liz_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Lizard"));
 
@@ -233,17 +239,13 @@ public class ShadowOfOptions : OptionInterface
         DrawBox(ref Tabs[1]);
         #endregion
 
-        #region Lizard
+        #region Deer
         AddNewLine();
         AddBox();
         AddNewLine();
-        DrawComboBox(ref Tabs[1], liz_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        DrawComboBox(ref Tabs[1], deer_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death" });
         AddNewLine();
-        AddCheckBox(liz_attack, (string)liz_attack.info.Tags[0]);
-        AddCheckBox(liz_attack_move, (string)liz_attack_move.info.Tags[0]);
-        AddCheckBox(liz_voice, (string)liz_voice.info.Tags[0]);
-        AddCheckBox(liz_fear_move, (string)liz_fear_move.info.Tags[0]);
-        AddCheckBox(liz_friend, (string)liz_friend.info.Tags[0]);
+        AddCheckBox(deer_eat, (string)deer_eat.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[1]);
         DrawBox(ref Tabs[1]);
         #endregion
@@ -252,6 +254,21 @@ public class ShadowOfOptions : OptionInterface
         #region Base Game Creatures 2
         Tabs[2] = new OpTab(this, "Base Creatures 2");
         InitializeMarginAndPos();
+
+        #region Lizard
+        AddNewLine();
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[2], liz_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(liz_attack, (string)liz_attack.info.Tags[0]);
+        AddCheckBox(liz_attack_move, (string)liz_attack_move.info.Tags[0]);
+        AddCheckBox(liz_voice, (string)liz_voice.info.Tags[0]);
+        AddCheckBox(liz_fear_move, (string)liz_fear_move.info.Tags[0]);
+        AddCheckBox(liz_friend, (string)liz_friend.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[2]);
+        DrawBox(ref Tabs[2]);
+        #endregion
 
         #region Slugcat
         AddNewLine();
@@ -1027,6 +1044,12 @@ public class ShadowOfOptions : OptionInterface
 
     public static Configurable<bool> cic_eat;
     public static Configurable<bool> cic_attack;
+    #endregion
+
+    #region Cicada
+    public static Configurable<string> deer_state;
+
+    public static Configurable<bool> deer_eat;
     #endregion
 
     #region Lizard

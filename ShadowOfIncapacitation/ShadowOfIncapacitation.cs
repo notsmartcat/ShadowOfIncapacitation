@@ -87,6 +87,9 @@ public class Incapacitation : BaseUnityPlugin
             CicadaHooks.Hooks.Apply();
             CicadaHooks.ILHooks.Apply();
 
+            DeerHooks.Hooks.Apply();
+            DeerHooks.ILHooks.Apply();
+
             DropBugHooks.Hooks.Apply();
             DropBugHooks.ILHooks.Apply();
 
@@ -357,7 +360,8 @@ public class Incapacitation : BaseUnityPlugin
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.CicadaA && ShadowOfOptions.cic_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && ShadowOfOptions.scav_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider && ShadowOfOptions.spid_state.Value != "Disabled" ||
-            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Centipede && ShadowOfOptions.centi_state.Value != "Disabled"))
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Centipede && ShadowOfOptions.centi_state.Value != "Disabled" ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Deer && ShadowOfOptions.deer_state.Value != "Disabled"))
         {
             return true;
         }
@@ -383,11 +387,12 @@ public class Incapacitation : BaseUnityPlugin
     public static bool IsAbstractCreatureCheatDeathValid(AbstractCreature self)
     {
         if (self != null && ShadowOfOptions.cheat_death.Value && (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LizardTemplate && ShadowOfOptions.liz_state.Value != "Disabled" && ShadowOfOptions.liz_state.Value != "Incapacitation Only" ||
-            (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Disabled" && ShadowOfOptions.vul_state.Value != "Incapacitation Only" ||
+            (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Incapacitation and Cheating Death" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.CicadaA && ShadowOfOptions.cic_state.Value != "Disabled" && ShadowOfOptions.cic_state.Value != "Incapacitation Only" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && (!ModManager.MSC || self.creatureTemplate.type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.ScavengerKing) && ShadowOfOptions.scav_state.Value != "Disabled" && ShadowOfOptions.scav_state.Value != "Incapacitation Only" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider && ShadowOfOptions.spid_state.Value != "Disabled" && ShadowOfOptions.spid_state.Value != "Incapacitation Only" ||
-            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Centipede && ShadowOfOptions.centi_state.Value != "Disabled" && ShadowOfOptions.centi_state.Value != "Incapacitation Only"))
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Centipede && ShadowOfOptions.centi_state.Value != "Disabled" && ShadowOfOptions.centi_state.Value != "Incapacitation Only" ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Deer && ShadowOfOptions.deer_state.Value == "Incapacitation and Cheating Death"))
         {
             return true;
         }
