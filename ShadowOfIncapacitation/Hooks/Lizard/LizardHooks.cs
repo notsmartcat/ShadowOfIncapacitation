@@ -477,7 +477,7 @@ internal class Hooks
             {
                 ai.noiseTracker.hearingSkill = ((self.rotModule.RotEyesClose < 1) ? 2f : 1f);
             }
-            if (ShadowOfOptions.liz_attack.Value && ai.casualAggressionTarget != null && !self.safariControlled && UnityEngine.Random.value < 0.5f && ai.casualAggressionTarget.VisualContact && Custom.DistLess(ai.casualAggressionTarget.representedCreature.realizedCreature.mainBodyChunk.pos, self.mainBodyChunk.pos, self.lizardParams.attemptBiteRadius))
+            if (ShadowOfOptions.liz_attack.Value && ai.casualAggressionTarget != null && !self.safariControlled && UnityEngine.Random.value < 0.25f && ai.casualAggressionTarget.VisualContact && Custom.DistLess(ai.casualAggressionTarget.representedCreature.realizedCreature.mainBodyChunk.pos, self.mainBodyChunk.pos, self.lizardParams.attemptBiteRadius))
             {
                 InconAct(data);
                 self.AttemptBite(ai.casualAggressionTarget.representedCreature.realizedCreature);

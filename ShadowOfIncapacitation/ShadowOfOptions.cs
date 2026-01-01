@@ -77,6 +77,12 @@ public class ShadowOfOptions : OptionInterface
         deer_eat = config.Bind("deer_eat", false, new ConfigurableInfo("If On Incapacitated Deer will eat Puffballs that are close enoug to them. (Default = false)", null, "", new object[1] { "Eat" }));
         #endregion
 
+        #region DropBug
+        drop_state = config.Bind("drop_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Drop Bug"));
+
+        drop_attack = config.Bind("drop_attack", false, new ConfigurableInfo("If On Incapacitated Drop Bugs will attack prey near them, their attacks cannot deal damage, this will move the creature. (Default = false)", null, "", new object[1] { "Attack" }));
+        #endregion
+
         #region Lizard
         liz_state = config.Bind("liz_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Lizard"));
 
@@ -97,6 +103,7 @@ public class ShadowOfOptions : OptionInterface
 
         vul_attack = config.Bind("vul_attack", false, new ConfigurableInfo("If On Incapacitated Vultures will attempt to bite prey near them. The bites will never actually damage anything (Default = false)", null, "", new object[1] { "Attempt Bite" }));
         vul_attack_move = config.Bind("vul_attack_move", false, new ConfigurableInfo("If On and Vulture Attempt Bite is On Incapacitated Vultures will slightly move themselves forward during bites, this will move the Vulture. (Default = false)", null, "", new object[1] { "Lunge" }));
+        vul_grab = config.Bind("vul_grab", false, new ConfigurableInfo("If On Incapacitated Vultures will will be capable of grabbing walls and ceilings with their tentacles(wings), this will move the Vulture. (Default = false)", null, "", new object[1] { "Grab" }));
         #endregion
 
         #region SlugPup
@@ -249,6 +256,17 @@ public class ShadowOfOptions : OptionInterface
         DrawCheckBoxes(ref Tabs[1]);
         DrawBox(ref Tabs[1]);
         #endregion
+
+        #region DropBug
+        AddNewLine();
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[1], drop_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(drop_attack, (string)drop_attack.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[1]);
+        DrawBox(ref Tabs[1]);
+        #endregion
         #endregion
 
         #region Base Game Creatures 2
@@ -266,6 +284,17 @@ public class ShadowOfOptions : OptionInterface
         AddCheckBox(liz_voice, (string)liz_voice.info.Tags[0]);
         AddCheckBox(liz_fear_move, (string)liz_fear_move.info.Tags[0]);
         AddCheckBox(liz_friend, (string)liz_friend.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[2]);
+        DrawBox(ref Tabs[2]);
+        #endregion
+
+        #region Scavenger
+        AddNewLine();
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[2], scav_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(scav_back_spear, (string)scav_back_spear.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[2]);
         DrawBox(ref Tabs[2]);
         #endregion
@@ -290,17 +319,7 @@ public class ShadowOfOptions : OptionInterface
         AddNewLine();
         AddCheckBox(vul_attack, (string)vul_attack.info.Tags[0]);
         AddCheckBox(vul_attack_move, (string)vul_attack_move.info.Tags[0]);
-        DrawCheckBoxes(ref Tabs[2]);
-        DrawBox(ref Tabs[2]);
-        #endregion
-
-        #region Scavenger
-        AddNewLine();
-        AddBox();
-        AddNewLine();
-        DrawComboBox(ref Tabs[2], scav_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
-        AddNewLine();
-        AddCheckBox(scav_back_spear, (string)scav_back_spear.info.Tags[0]);
+        AddCheckBox(vul_grab, (string)vul_grab.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[2]);
         DrawBox(ref Tabs[2]);
         #endregion
@@ -1046,10 +1065,16 @@ public class ShadowOfOptions : OptionInterface
     public static Configurable<bool> cic_attack;
     #endregion
 
-    #region Cicada
+    #region Deer
     public static Configurable<string> deer_state;
 
     public static Configurable<bool> deer_eat;
+    #endregion
+
+    #region DropBug
+    public static Configurable<string> drop_state;
+
+    public static Configurable<bool> drop_attack;
     #endregion
 
     #region Lizard
@@ -1072,6 +1097,7 @@ public class ShadowOfOptions : OptionInterface
 
     public static Configurable<bool> vul_attack;
     public static Configurable<bool> vul_attack_move;
+    public static Configurable<bool> vul_grab;
     #endregion
 
     #region SlugNPC

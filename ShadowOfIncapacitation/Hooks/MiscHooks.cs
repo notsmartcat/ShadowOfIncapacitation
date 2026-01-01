@@ -55,7 +55,7 @@ internal class MiscHooks
 
     static void CreatureDie(On.Creature.orig_Die orig, Creature self)
     {
-        if (!ShadowOfOptions.cheat_death.Value || !inconstorage.TryGetValue(self.abstractCreature, out InconData data) || (shadowOfLizardsCheck && HasLizardData()))
+        if (!ShadowOfOptions.cheat_death.Value || !inconstorage.TryGetValue(self.abstractCreature, out InconData data) || IsAbstractCreatureCheatDeathValid(self.abstractCreature) || (shadowOfLizardsCheck && HasLizardData()))
         {
             orig(self);
             return;

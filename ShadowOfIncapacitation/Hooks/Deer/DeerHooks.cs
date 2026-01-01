@@ -220,7 +220,7 @@ internal class Hooks
         }
         for (int m = 0; m < 5; m++)
         {
-            float num7 = (float)m / 5f;
+            //float num7 = (float)m / 5f;
             self.bodyChunks[m].vel *= Mathf.Lerp(1f, self.stayStill ? 0.7f : 0.92f, support);
             self.bodyChunks[m].vel *= 1f - self.resting * 0.5f;
             if (m < 4)

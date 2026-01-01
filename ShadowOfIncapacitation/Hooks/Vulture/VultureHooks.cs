@@ -176,31 +176,12 @@ internal class Hooks
             self.bodyChunks[num3].vel *= Mathf.Lerp(0.98f, 0.9f, num2);
             if (num2 > 0.1f)
             {
-                BodyChunk bodyChunk2 = self.bodyChunks[num3];
-                bodyChunk2.vel.y = bodyChunk2.vel.y + Mathf.Lerp(1.2f, 0.5f, num2);
+                self.bodyChunks[num3].vel.y += Mathf.Lerp(1.2f, 0.5f, num2);
             }
         }
-        BodyChunk bodyChunk3 = self.bodyChunks[1];
-        bodyChunk3.vel.y += 1.9f * num2 * Mathf.InverseLerp(1f, 7f, self.mainBodyChunk.vel.magnitude);
-        BodyChunk bodyChunk4 = self.bodyChunks[0];
-        bodyChunk4.vel.y -= 1.9f * num2 * Mathf.InverseLerp(1f, 7f, self.mainBodyChunk.vel.magnitude);
-        if (!self.hoverStill && (movementConnection == default(MovementConnection) || (movementConnection.DestTile == self.lastConnection.DestTile && self.room.IsPositionInsideBoundries(self.abstractCreature.pos.Tile))))
-        {
-            self.stuck++;
-            if (self.stuck > 60)
-            {
-                self.stuckShake = self.stuckShakeDuration;
-                self.stuckShakeDuration += 30;
-            }
-        }
-        else
-        {
-            self.stuck = 0;
-            if (self.stuckShakeDuration > 30)
-            {
-                self.stuckShakeDuration--;
-            }
-        }
+        self.bodyChunks[1].vel.y += 1.9f * num2 * Mathf.InverseLerp(1f, 7f, self.mainBodyChunk.vel.magnitude);
+        self.bodyChunks[0].vel.y -= 1.9f * num2 * Mathf.InverseLerp(1f, 7f, self.mainBodyChunk.vel.magnitude);
+
         if (self.room == null)
         {
             return;
@@ -209,17 +190,8 @@ internal class Hooks
         {
             if (self.room.GetTile(self.abstractCreature.pos.Tile + Custom.fourDirectionsAndZero[num5]).wormGrass)
             {
-                self.stuckShake = Math.Max(self.stuckShake, 40);
                 self.mainBodyChunk.vel -= Custom.fourDirectionsAndZero[num5].ToVector2() * 2f + Custom.RNV() * 6f + new Vector2(0f, 6f);
             }
-        }
-        if (self.AI.stuckTracker.Utility() > 0.9f)
-        {
-            self.stuckShake = Math.Max(self.stuckShake, 5);
-        }
-        if (self.stuckShake > 0)
-        {
-            self.stuckShake--;
         }
         if (!self.hoverStill)
         {
@@ -228,7 +200,8 @@ internal class Hooks
             {
                 flag3 = (flag3 && (self.tentacles[num6].hasAnyGrip || self.tentacles[num6].mode != VultureTentacle.Mode.Climb));
             }
-            if (self.hangingInTentacle && flag3)
+
+            if (ShadowOfOptions.vul_grab.Value && self.hangingInTentacle && flag3)
             {
                 self.releaseGrippingTentacle++;
                 if (self.releaseGrippingTentacle > 5 && self.CheckTentacleModeAnd(VultureTentacle.Mode.Climb))
@@ -302,11 +275,11 @@ internal class Hooks
         {
             if (self.AI.preyInTuskChargeRange)
             {
-                self.tuskCharge = Mathf.Clamp(self.tuskCharge + 0.025f, 0f, 1f);
+                self.tuskCharge = Mathf.Clamp(self.tuskCharge + 0.005f, 0f, 1f);
             }
             else
             {
-                self.tuskCharge = Mathf.Clamp(self.tuskCharge - 0.011111111f, 0f, 1f);
+                self.tuskCharge = Mathf.Clamp(self.tuskCharge - 0.000111111f, 0f, 1f);
             }
         }
         else
@@ -393,10 +366,7 @@ internal class Hooks
             }
             if (!(ai.behavior == VultureAI.Behavior.GoToMask))
             {
-                if (ai.behavior == VultureAI.Behavior.Idle)
-                {
-                }
-                else if (ai.behavior == VultureAI.Behavior.ReturnPrey || ai.behavior == VultureAI.Behavior.EscapeRain || ai.behavior == VultureAI.Behavior.Disencouraged)
+                if (ai.behavior == VultureAI.Behavior.ReturnPrey || ai.behavior == VultureAI.Behavior.EscapeRain || ai.behavior == VultureAI.Behavior.Disencouraged)
                 {
                     ai.focusCreature = null;
                 }
