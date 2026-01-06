@@ -283,5 +283,25 @@ internal class ILHooks
             Incapacitation.Logger.LogInfo(all + "Could not find match ILDropBugUpdate Act!");
         }
         #endregion
+
+        #region Footing
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<DropBug>("get_Footing"),
+            x => x.MatchBrfalse(out target)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(IsComa);
+            val.Emit(OpCodes.Brtrue, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILDropBugUpdate Footing!");
+        }
+        #endregion
     }
 }

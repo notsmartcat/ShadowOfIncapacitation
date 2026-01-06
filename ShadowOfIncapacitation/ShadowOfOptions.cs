@@ -12,7 +12,7 @@ public class ShadowOfOptions : OptionInterface
         #region Main
         debug_keys = config.Bind("debug_keys", false, new ConfigurableInfo("If turned On N kills all creatures that can be affected by this mod in the Players room putting them in the 'Incapacitated' state. (Default = false)", null, "", new object[1] { "Debug Keys" }));
         debug_logs = config.Bind("debug_logs", false, new ConfigurableInfo("If turned On Messages that include info about Creatures will show up when you turn on Debug Logs, these will also appear in the 'consoleLog.txt' all logs from this mod start with 'IncapacitationOf:' for easy locating. (Default = false)", null, "", new object[1] { "Debug Logs" }));
-        chance_logs = config.Bind("chance_logs", false, new ConfigurableInfo("If turned On Messages that include exact chance numbers Lizards rolled compared to the target number to succed a check, these will also appear in the 'consoleLog.txt' all logs from this mod start with 'ShadowOf:' for easy locating. (Default = false)", null, "", new object[1] { "Chance Debug Logs" }));
+        chance_logs = config.Bind("chance_logs", false, new ConfigurableInfo("If turned On Messages that include exact chance numbers Lizards rolled compared to the target number to succed a check, these will also appear in the 'consoleLog.txt' all logs from this mod start with 'IncapacitationOf:' for easy locating. (Default = false)", null, "", new object[1] { "Chance Debug Logs" }));
 
         #region Chances
         uncon_chance_bleed = config.Bind("uncon_chance_bleed", 10, new ConfigurableInfo("", null, "", new object[1] { "" }));
@@ -36,7 +36,9 @@ public class ShadowOfOptions : OptionInterface
         die_threshold_max = config.Bind("die_threshold_max", 0.5f, new ConfigurableInfo("", new ConfigAcceptableRange<float>(0.1f, 3f), "", new object[1] { "" }));
 
         cheat_death = config.Bind("cheat_death", false, new ConfigurableInfo("If On Creatures affected by this mod can Cheat Death, which means they will not be replaced on the next cycle. (Default = false)", null, "", new object[1] { "Cheat Death" }));
-        den_revive = config.Bind("den_revive", false, new ConfigurableInfo("If On Creatures that are either Unconscious or Incapacitated will be revived if brought into the player's Den. After being revived the creature will go to it's den (if it has a den) and the creature will be neutral to the Player unless attacked. (Default = false)", null, "", new object[1] { "Den Revive" }));
+        den_revive = config.Bind("den_revive", false, new ConfigurableInfo("If On Creatures that are either Unconscious or Incapacitated will be revived if brought into the player's Den. After being revived the creature will go to it's own den and it will also be neutral to the Player unless attacked. (Default = false)", null, "", new object[1] { "Den Revive" }));
+
+        breath = config.Bind("breath", "Unconscious Only", new ConfigurableInfo("Breath"));
 
         blunt_uncon_guaranteed = config.Bind("blunt_uncon_guaranteed", true, new ConfigurableInfo("If On Incapacitated Creatures will be guaranteed to be knocked Unconscious state if hit in the head and their health if less then half (if applicable) (Default = true)", null, "", new object[1] { "Guaranteed Unconscious" }));
 
@@ -46,6 +48,12 @@ public class ShadowOfOptions : OptionInterface
 
         #region Creatures
         #region Base Game
+        #region Batfly
+        bat_state = config.Bind("bat_state", "Incapacitation", new ConfigurableInfo("Batfly"));
+
+        bat_rescue = config.Bind("bat_rescue", false, new ConfigurableInfo("If On Batflies will attempt to pick up and bring Incapacitated or Unconscious Batflies back to their den. (Default = false)", null, "", new object[1] { "Rescue" }));
+        #endregion
+
         #region BigSpider
         spid_state = config.Bind("spid_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Big Spider"));
 
@@ -72,15 +80,22 @@ public class ShadowOfOptions : OptionInterface
         #endregion
 
         #region Deer
-        deer_state = config.Bind("deer_state", "Incapacitation and Cheating Death", new ConfigurableInfo("Deer"));
+        deer_state = config.Bind("deer_state", "Incapacitation and Cheating Death", new ConfigurableInfo("Rain Deer"));
 
-        deer_eat = config.Bind("deer_eat", false, new ConfigurableInfo("If On Incapacitated Deer will eat Puffballs that are close enoug to them. (Default = false)", null, "", new object[1] { "Eat" }));
+        deer_eat = config.Bind("deer_eat", false, new ConfigurableInfo("If On Incapacitated Rain Deer will eat Puffballs that are close enoug to them. (Default = false)", null, "", new object[1] { "Eat" }));
         #endregion
 
         #region DropBug
-        drop_state = config.Bind("drop_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Drop Bug"));
+        drop_state = config.Bind("drop_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Dropwig"));
 
-        drop_attack = config.Bind("drop_attack", false, new ConfigurableInfo("If On Incapacitated Drop Bugs will attack prey near them, their attacks cannot deal damage, this will move the creature. (Default = false)", null, "", new object[1] { "Attack" }));
+        drop_attack = config.Bind("drop_attack", false, new ConfigurableInfo("If On Incapacitated Dropwigs will attack prey near them, their attacks cannot deal damage, this will move the creature. (Default = false)", null, "", new object[1] { "Attack" }));
+        #endregion
+
+        #region EggBug
+        egg_state = config.Bind("egg_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("EggBug"));
+
+        egg_egg = config.Bind("egg_egg", false, new ConfigurableInfo("If On Incapacitated Eggbugs will not drop their eggs when they are Incapacitated or Unconscious. (Default = false)", null, "", new object[1] { "Egg" }));
+        egg_den = config.Bind("egg_den", false, new ConfigurableInfo("If On Incapacitated Eggbugs will gain back their eggs when revived using the den. (The eggs will always spawn back on the EggBug if it Cheats Death outside of the player den) (Default = false)", null, "", new object[1] { "Den" }));
         #endregion
 
         #region Lizard
@@ -117,7 +132,16 @@ public class ShadowOfOptions : OptionInterface
         #region Scavenger
         scav_state = config.Bind("scav_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Scavenger"));
 
-        scav_back_spear = config.Bind("scav_back_spear", false, new ConfigurableInfo("If On Scavengers will not drop any items that are attacked to them (such as back-spears) when they are Incapacitated or Unconscious. (Default = false)", null, "", new object[1] { "Drop Items" }));
+        scav_back_spear = config.Bind("scav_back_spear", false, new ConfigurableInfo("If On Scavengers will not drop any items that are attached to them (such as back-spears) when they are Incapacitated or Unconscious. (Default = false)", null, "", new object[1] { "Drop Items" }));
+        #endregion
+        #endregion
+
+        #region Downpour
+        #region EggBug
+        fire_state = config.Bind("fire_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("FireBug"));
+
+        fire_spear = config.Bind("fire_spear", false, new ConfigurableInfo("If On Incapacitated Firebugs will not drop their Spears when they are Incapacitated or Unconscious. (Default = false)", null, "", new object[1] { "Spear" }));
+        fire_den = config.Bind("fire_den", false, new ConfigurableInfo("If On Incapacitated Firebugs will gain back their eggs and spears when revived using the den. (The eggs and spears will always spawn back on the FireBug if it Cheats Death outside of the player den) (Default = false)", null, "", new object[1] { "Den" }));
         #endregion
         #endregion
         #endregion
@@ -149,7 +173,7 @@ public class ShadowOfOptions : OptionInterface
     public override void Initialize()
     {
         base.Initialize();
-        Tabs = new OpTab[3];
+        Tabs = new OpTab[5];
 
         #region Main Options
         Tabs[0] = new OpTab(this, "Main Options");
@@ -167,29 +191,26 @@ public class ShadowOfOptions : OptionInterface
         AddSecondarySlider(incon_chance_bleed, "100%");
         DrawDualSliders(ref Tabs[0], 0);
 
-        //AddNewLine();
         AddSlider(uncon_chance_blunt, (string)uncon_chance_blunt.info.Tags[0], "0%", "100%");
         AddSecondarySlider(incon_chance_blunt, "100%");
         DrawDualSliders(ref Tabs[0], 1);
 
-        //AddNewLine();
         AddSlider(uncon_chance_stab, (string)uncon_chance_stab.info.Tags[0], "0%", "100%");
         AddSecondarySlider(incon_chance_stab, "100%");
         DrawDualSliders(ref Tabs[0], 2);
 
-        //AddNewLine();
         AddSlider(uncon_chance_electric, (string)uncon_chance_electric.info.Tags[0], "0%", "100%");
         AddSecondarySlider(incon_chance_electric, "100%");
         DrawDualSliders(ref Tabs[0], 3);
 
-        //AddNewLine();
         AddSlider(uncon_chance_explosion, (string)uncon_chance_explosion.info.Tags[0], "0%", "100%");
         AddSecondarySlider(incon_chance_explosion, "100%");
         DrawDualSliders(ref Tabs[0], 4);
-        DrawBox(ref Tabs[0]);
 
+        AddNewLine(2);
+        DrawComboBox(ref Tabs[0], breath, new List<string> { "Disabled", "Unconscious Only", "Incapacitated or Unconscious" });
         AddNewLine();
-        AddBox();
+
         AddCheckBox(cheat_death, (string)cheat_death.info.Tags[0]);
         AddCheckBox(den_revive, (string)den_revive.info.Tags[0]);
         AddCheckBox(blunt_uncon_guaranteed, (string)blunt_uncon_guaranteed.info.Tags[0]);
@@ -207,7 +228,18 @@ public class ShadowOfOptions : OptionInterface
         Tabs[1] = new OpTab(this, " Base Creatures 1");
         InitializeMarginAndPos();
 
+        #region Batfly
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[1], bat_state, new List<string> { "Disabled", "Incapacitation Only" });
+        AddNewLine();
+        AddCheckBox(bat_rescue, (string)bat_rescue.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[1]);
+        DrawBox(ref Tabs[1]);
+        #endregion
+
         #region BigSpider
+        AddNewLine(0.5f);
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[1], spid_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
@@ -223,7 +255,7 @@ public class ShadowOfOptions : OptionInterface
         #endregion
 
         #region Centipede
-        AddNewLine();
+        AddNewLine(0.5f);
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[1], centi_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
@@ -235,7 +267,7 @@ public class ShadowOfOptions : OptionInterface
         #endregion
 
         #region Cicada
-        AddNewLine();
+        AddNewLine(0.5f);
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[1], cic_state, new List<string>{ "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
@@ -247,23 +279,12 @@ public class ShadowOfOptions : OptionInterface
         #endregion
 
         #region Deer
-        AddNewLine();
+        AddNewLine(0.5f);
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[1], deer_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death" });
         AddNewLine();
         AddCheckBox(deer_eat, (string)deer_eat.info.Tags[0]);
-        DrawCheckBoxes(ref Tabs[1]);
-        DrawBox(ref Tabs[1]);
-        #endregion
-
-        #region DropBug
-        AddNewLine();
-        AddBox();
-        AddNewLine();
-        DrawComboBox(ref Tabs[1], drop_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
-        AddNewLine();
-        AddCheckBox(drop_attack, (string)drop_attack.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[1]);
         DrawBox(ref Tabs[1]);
         #endregion
@@ -273,8 +294,30 @@ public class ShadowOfOptions : OptionInterface
         Tabs[2] = new OpTab(this, "Base Creatures 2");
         InitializeMarginAndPos();
 
-        #region Lizard
+        #region DropBug
+        AddBox();
         AddNewLine();
+        DrawComboBox(ref Tabs[2], drop_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(drop_attack, (string)drop_attack.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[2]);
+        DrawBox(ref Tabs[2]);
+        #endregion
+
+        #region EggBug
+        AddNewLine(0.5f);
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[2], egg_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(egg_egg, (string)egg_egg.info.Tags[0]);
+        AddCheckBox(egg_den, (string)egg_den.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[2]);
+        DrawBox(ref Tabs[2]);
+        #endregion
+
+        #region Lizard
+        AddNewLine(0.5f);
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[2], liz_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
@@ -289,7 +332,7 @@ public class ShadowOfOptions : OptionInterface
         #endregion
 
         #region Scavenger
-        AddNewLine();
+        AddNewLine(0.5f);
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[2], scav_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
@@ -300,7 +343,7 @@ public class ShadowOfOptions : OptionInterface
         #endregion
 
         #region Slugcat
-        AddNewLine();
+        AddNewLine(0.5f);
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[2], slug_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Den Revive" });
@@ -311,17 +354,38 @@ public class ShadowOfOptions : OptionInterface
         DrawCheckBoxes(ref Tabs[2]);
         DrawBox(ref Tabs[2]);
         #endregion
+        #endregion
+
+        #region Base Game Creatures 3
+        Tabs[3] = new OpTab(this, "Base Creatures 3");
+        InitializeMarginAndPos();
 
         #region Vulture
         AddBox();
         AddNewLine();
-        DrawComboBox(ref Tabs[2], vul_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death" });
+        DrawComboBox(ref Tabs[3], vul_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death" });
         AddNewLine();
         AddCheckBox(vul_attack, (string)vul_attack.info.Tags[0]);
         AddCheckBox(vul_attack_move, (string)vul_attack_move.info.Tags[0]);
         AddCheckBox(vul_grab, (string)vul_grab.info.Tags[0]);
-        DrawCheckBoxes(ref Tabs[2]);
-        DrawBox(ref Tabs[2]);
+        DrawCheckBoxes(ref Tabs[3]);
+        DrawBox(ref Tabs[3]);
+        #endregion
+        #endregion
+
+        #region Downpour Creatures 1
+        Tabs[4] = new OpTab(this, "Downpour Creatures 1");
+        InitializeMarginAndPos();
+
+        #region FireBug
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[4], fire_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(fire_spear, (string)fire_spear.info.Tags[0]);
+        AddCheckBox(fire_den, (string)fire_den.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[4]);
+        DrawBox(ref Tabs[4]);
         #endregion
         #endregion
     }
@@ -1035,11 +1099,19 @@ public class ShadowOfOptions : OptionInterface
     public static Configurable<bool> cheat_death;
     public static Configurable<bool> den_revive;
 
+    public static Configurable<string> breath;
+
     public static Configurable<bool> blunt_uncon_guaranteed;
     #endregion
 
     #region Creatures
     #region Base Game
+    #region Batfly
+    public static Configurable<string> bat_state;
+
+    public static Configurable<bool> bat_rescue;
+    #endregion
+
     #region BigSpider
     public static Configurable<string> spid_state;
 
@@ -1077,6 +1149,13 @@ public class ShadowOfOptions : OptionInterface
     public static Configurable<bool> drop_attack;
     #endregion
 
+    #region EggBug
+    public static Configurable<string> egg_state;
+
+    public static Configurable<bool> egg_egg;
+    public static Configurable<bool> egg_den;
+    #endregion
+
     #region Lizard
     public static Configurable<string> liz_state;
 
@@ -1112,6 +1191,15 @@ public class ShadowOfOptions : OptionInterface
     public static Configurable<string> scav_state;
 
     public static Configurable<bool> scav_back_spear;
+    #endregion
+    #endregion
+
+    #region Downpour
+    #region FireBug
+    public static Configurable<string> fire_state;
+
+    public static Configurable<bool> fire_spear;
+    public static Configurable<bool> fire_den;
     #endregion
     #endregion
     #endregion

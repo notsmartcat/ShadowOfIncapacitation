@@ -192,7 +192,7 @@ internal class Hooks
             }
             self.applyGravity = (self.inAllowedTerrainCounter < self.lizardParams.regainFootingCounter || self.NoGripCounter > 10 || self.commitedToDropConnection != default(MovementConnection));
             //self.swim = Mathf.Clamp(self.swim - 0.05f, 0f, 1f);
-            ai.stuckTracker.satisfiedWithThisPosition = (self.swim > 0.5f);
+            //ai.stuckTracker.satisfiedWithThisPosition = (self.swim > 0.5f);
             float num4 = self.ActAnimation();
             if (ModManager.DLCShared && self.Template.type == DLCSharedEnums.CreatureTemplateType.EelLizard && self.Submersion == 0f)
             {
@@ -482,10 +482,12 @@ internal class Hooks
                 InconAct(data);
                 self.AttemptBite(ai.casualAggressionTarget.representedCreature.realizedCreature);
             }
+
+            /*
             if (ShadowOfOptions.liz_spit.Value && (self.Template.type == CreatureTemplate.Type.RedLizard || (ModManager.DLCShared && self.Template.type == DLCSharedEnums.CreatureTemplateType.SpitLizard)) && ai.redSpitAI.spitting)
             {
                 InconAct(data);
-                self.EnterAnimation(global::Lizard.Animation.Spit, false);
+                self.EnterAnimation(Lizard.Animation.Spit, false);
             }
             if (ShadowOfOptions.liz_blizzard.Value && self.blizzardModule != null)
             {
@@ -508,6 +510,7 @@ internal class Hooks
                     self.blizzardModule.targetInViewTime--;
                 }
             }
+            */
 
             MiscHooks.AIUpdate(ai);
         }

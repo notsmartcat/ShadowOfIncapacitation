@@ -1,7 +1,5 @@
-﻿using MonoMod.RuntimeDetour;
-using RWCustom;
+﻿using RWCustom;
 using System;
-using System.Drawing;
 using UnityEngine;
 
 using static Incapacitation.Incapacitation;
@@ -15,6 +13,32 @@ internal class Hooks
         On.DropBug.Update += DropBugUpdate;
 
         On.DropBug.Collide += DropBugCollide;
+
+        On.DropBugGraphics.Update += DropBugGraphicsUpdate;
+        On.DropBugGraphics.DrawSprites += DropBugGraphicsDrawSprites;
+    }
+
+    static void DropBugGraphicsDrawSprites(On.DropBugGraphics.orig_DrawSprites orig, DropBugGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+    {
+        orig(self, sLeaser, rCam, timeStacker, camPos);
+
+        if (!breathstorage.TryGetValue(self, out BreathData data) || self.culled)
+        {
+            return;
+        }
+
+        sLeaser.sprites[self.HeadSprite].scaleX = 0.7f * MiscHooks.ApplyBreath(data, timeStacker);
+        sLeaser.sprites[self.HeadSprite].scaleY = 0.8f * MiscHooks.ApplyBreath(data, timeStacker);
+    }
+
+    static void DropBugGraphicsUpdate(On.DropBugGraphics.orig_Update orig, DropBugGraphics self)
+    {
+        orig(self);
+
+        if (BreathCheck(self.bug))
+        {
+            MiscHooks.UpdateBreath(self);
+        }
     }
 
     private static void DropBugCollide(On.DropBug.orig_Collide orig, DropBug self, PhysicalObject otherObject, int myChunk, int otherChunk)

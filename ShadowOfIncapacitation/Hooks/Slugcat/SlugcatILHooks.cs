@@ -4,7 +4,7 @@ using System;
 using UnityEngine;
 using static Incapacitation.Incapacitation;
 
-namespace Incapacitation.PlayerHooks;
+namespace Incapacitation.SlugcatHooks;
 
 internal class ILHooks
 {

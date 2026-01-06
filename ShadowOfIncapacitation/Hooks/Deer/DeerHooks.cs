@@ -13,6 +13,35 @@ internal class Hooks
     public static void Apply()
     {
         On.Deer.Update += DeerUpdate;
+
+        On.DeerGraphics.DrawSprites += DeerGraphicsDrawSprites;
+        On.DeerGraphics.Update += DeerGraphicsUpdate;
+    }
+
+    static void DeerGraphicsDrawSprites(On.DeerGraphics.orig_DrawSprites orig, DeerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+    {
+        orig(self, sLeaser, rCam, timeStacker, camPos);
+
+        if (!breathstorage.TryGetValue(self, out BreathData data) || self.culled)
+        {
+            return;
+        }
+
+        for (int i = 0; i < 5; i++)
+        {
+            sLeaser.sprites[self.BodySprite(i)].scaleX = self.owner.bodyChunks[i].rad / 8f * 1.05f * MiscHooks.ApplyBreath(data, timeStacker);
+            sLeaser.sprites[self.BodySprite(i)].scaleY = self.owner.bodyChunks[i].rad / 8f * 1.3f * MiscHooks.ApplyBreath(data, timeStacker);
+        }
+    }
+
+    static void DeerGraphicsUpdate(On.DeerGraphics.orig_Update orig, DeerGraphics self)
+    {
+        orig(self);
+
+        if (BreathCheck(self.deer))
+        {
+            MiscHooks.UpdateBreath(self);
+        }
     }
 
     static void DeerUpdate(On.Deer.orig_Update orig, Deer self, bool eu)

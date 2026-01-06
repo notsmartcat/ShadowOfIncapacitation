@@ -454,18 +454,11 @@ internal class Hooks
     {
         orig(self, sLeaser, rCam, timeStacker, camPosV2);
 
-        if (!breathstorage.TryGetValue(self, out BreathData data) || !IsUncon(self.scavenger))
+        if (!breathstorage.TryGetValue(self, out BreathData data) || self.culled)
         {
             return;
         }
-
-        float num4 = (Mathf.Sin(Mathf.Lerp(data.lastBreath, data.breath, timeStacker) * 3.1415927f * 2f) + 1f) * 0.5f;
-
-        float num6 = self.scavenger.bodyChunks[0].rad;
-
-        num6 *= 1f + num4 * (float)3 * 0.1f * 0.5f;
-
-        //sLeaser.sprites[self.ChestSprite].scale = num6 / 10f;
+        float num6 = self.scavenger.bodyChunks[0].rad * MiscHooks.ApplyBreath(data, timeStacker);
 
         sLeaser.sprites[self.ChestSprite].scaleX = num6 * Mathf.Lerp(0.7f, 1.3f, self.iVars.fatness) / 10f;
         sLeaser.sprites[self.ChestSprite].scaleY = (num6 + Mathf.Lerp(2f, 1.5f, self.iVars.narrowWaist)) / 10f;

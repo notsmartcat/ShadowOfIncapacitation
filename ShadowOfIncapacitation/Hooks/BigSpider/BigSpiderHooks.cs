@@ -148,7 +148,7 @@ internal class Hooks
             return;
         }
 
-        self.breathCounter += UnityEngine.Random.value * (IsIncon(self.bug) ? 1.25f : 0.75f);
+        self.breathCounter += UnityEngine.Random.value * (IsInconBase(self.bug) ? 1.25f : 0.75f);
         if (self.bug.Stunned && self.bug.deathConvulsions > 0f)
         {
             self.soundLoop.Volume = Mathf.Max(self.soundLoop.Volume, 0.5f * self.bug.deathConvulsions);

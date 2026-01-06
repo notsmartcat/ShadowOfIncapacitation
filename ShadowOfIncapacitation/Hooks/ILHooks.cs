@@ -22,8 +22,6 @@ internal class ILHooksMisc
 
         IL.DaddyLongLegs.Eat += ILDaddyLongLegsEat;
 
-        IL.Fly.BitByPlayer += ILFlyBitByPlayer;
-
         IL.Hazer.Update += ILHazerUpdate;
 
         IL.InsectoidCreature.Update += ILInsectoidCreatureUpdate;
@@ -847,42 +845,6 @@ internal class ILHooksMisc
         else
         {
             Incapacitation.Logger.LogInfo(all + "Could not find match ILHazerUpdate!");
-        }
-    }
-
-    static void ILFlyBitByPlayer(ILContext il)
-    {
-        ILCursor val = new(il);
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchSub(),
-            x => x.MatchStfld<Fly>("bites")
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(CreatureBitByPlayer);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILFlyBitByPlayer!");
-        }
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(1),
-            x => x.MatchLdfld<Creature.Grasp>("grabber"),
-            x => x.MatchIsinst(typeof(Player))
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(ActuallyKill);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILFlyBitByPlayer ActuallyKill!");
         }
     }
 

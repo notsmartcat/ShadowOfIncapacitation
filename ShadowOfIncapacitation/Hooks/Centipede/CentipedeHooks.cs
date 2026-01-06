@@ -140,7 +140,7 @@ internal class Hooks
     {
         orig(self);
 
-        if (IsUncon(self.centipede))
+        if (BreathCheck(self.centipede))
         {
             MiscHooks.UpdateBreath(self);
         }
@@ -150,14 +150,10 @@ internal class Hooks
     {
         orig(self, sLeaser, rCam, timeStacker, camPos);
 
-        if (!breathstorage.TryGetValue(self, out BreathData data) || !IsUncon(self.centipede))
+        if (!breathstorage.TryGetValue(self, out BreathData data) || self.culled)
         {
             return;
         }
-
-        float num4 = (Mathf.Sin(Mathf.Lerp(data.lastBreath, data.breath, timeStacker) * 3.1415927f * 2f) + 1f) * 0.5f;
-
-        //sLeaser.sprites[self.BodySprite].scale = num6;
 
         for (int i = 0; i < self.owner.bodyChunks.Length; i++)
         {
@@ -174,18 +170,16 @@ internal class Hooks
             {
                 num2 = Mathf.Lerp(0.8f, 0.2f, Mathf.Pow(Mathf.Clamp(Mathf.Sin(num * 3.1415927f), 0f, 1f), 2f));
             }
-            sLeaser.sprites[self.SegmentSprite(i)].scaleX = self.owner.bodyChunks[i].rad * (Mathf.Lerp(1f, Mathf.Lerp(1.5f, 0.9f, Mathf.Abs(normalized.x)), num2) * 2f * 0.0625f) *1f + num4 * (float)3 * 0.1f * 0.5f;
+            sLeaser.sprites[self.SegmentSprite(i)].scaleX = self.owner.bodyChunks[i].rad * (Mathf.Lerp(1f, Mathf.Lerp(1.5f, 0.9f, Mathf.Abs(normalized.x)), num2) * 2f * 0.0625f) * MiscHooks.ApplyBreath(data, timeStacker);
             for (int k = 0; k < (self.centipede.AquaCenti ? 2 : 1); k++)
             {
                 if (normalized.y > 0f)
                 {
-                    sLeaser.sprites[self.ShellSprite(i, k)].scaleX = (self.owner.bodyChunks[i].rad * Mathf.Lerp(1f, Mathf.Lerp(1.5f, 0.9f, Mathf.Abs(normalized.x)), num2) * 1.8f * normalized.y * 0.071428575f) * 1f + num4 * (float)3 * 0.1f * 0.5f;
-                    //sLeaser.sprites[self.ShellSprite(i, k)].scaleY = (self.owner.bodyChunks[i].rad * (self.centipede.Red ? 1.7f : 1.5f) * 0.09090909f) *1f + num4 * (float)3 * 0.1f * 0.5f;
+                    sLeaser.sprites[self.ShellSprite(i, k)].scaleX = (self.owner.bodyChunks[i].rad * Mathf.Lerp(1f, Mathf.Lerp(1.5f, 0.9f, Mathf.Abs(normalized.x)), num2) * 1.8f * normalized.y * 0.071428575f) * MiscHooks.ApplyBreath(data, timeStacker);
                 }
                 else
                 {
-                    sLeaser.sprites[self.ShellSprite(i, k)].scaleX = (self.owner.bodyChunks[i].rad * -1.8f * normalized.y * 0.071428575f) * 1f + num4 * (float)3 * 0.1f * 0.5f;
-                    //sLeaser.sprites[self.ShellSprite(i, k)].scaleY = (self.owner.bodyChunks[i].rad * 1.3f * 0.09090909f) * 1f + num4 * (float)3 * 0.1f * 0.5f;
+                    sLeaser.sprites[self.ShellSprite(i, k)].scaleX = (self.owner.bodyChunks[i].rad * -1.8f * normalized.y * 0.071428575f) * MiscHooks.ApplyBreath(data, timeStacker);
                 }
             }
             if (i > 0)

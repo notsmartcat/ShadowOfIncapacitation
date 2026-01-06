@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 
 using static Incapacitation.Incapacitation;
-using Mono.Cecil;
 
 namespace Incapacitation;
 
@@ -55,7 +54,7 @@ internal class MiscHooks
 
     static void CreatureDie(On.Creature.orig_Die orig, Creature self)
     {
-        if (!ShadowOfOptions.cheat_death.Value || !inconstorage.TryGetValue(self.abstractCreature, out InconData data) || IsAbstractCreatureCheatDeathValid(self.abstractCreature) || (shadowOfLizardsCheck && HasLizardData()))
+        if (!ShadowOfOptions.cheat_death.Value || !inconstorage.TryGetValue(self.abstractCreature, out InconData data) || !IsAbstractCreatureCheatDeathValid(self.abstractCreature) || (shadowOfLizardsCheck && HasLizardData()))
         {
             orig(self);
             return;
@@ -705,6 +704,13 @@ internal class MiscHooks
 
         breathData.lastBreath = breathData.breath;
 
-        breathData.breath += 0.0125f;
+        breathData.breath += IsInconBase(self.owner as Creature) ? 0.0200f : 0.0100f;
+    }
+
+    public static float ApplyBreath(BreathData data, float timeStacker)
+    {
+        float breath = (Mathf.Sin(Mathf.Lerp(data.lastBreath, data.breath, timeStacker) * 3.1415927f * 2f) + 1f) * 0.5f;
+
+        return 1f + breath * (float)3 * 0.1f * 0.5f;
     }
 }

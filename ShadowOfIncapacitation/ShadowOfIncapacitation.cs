@@ -38,6 +38,8 @@ public class Incapacitation : BaseUnityPlugin
         public bool spiderMotherWasDead = false;
 
         public bool forceTame = false;
+
+        public Creature rescueCandidate = null;
     }
 
     public class BreathData
@@ -52,6 +54,8 @@ public class Incapacitation : BaseUnityPlugin
     public static readonly ConditionalWeakTable<AbstractCreature, InconData> inconstorage = new();
 
     public static readonly ConditionalWeakTable<GraphicsModule, BreathData> breathstorage = new();
+
+    public static readonly FlyAI.Behavior RescueIncon = new("RescueIncon", true);
     #endregion
 
     #region Misc Values
@@ -78,6 +82,9 @@ public class Incapacitation : BaseUnityPlugin
             MiscHooks.Apply();
             ForceDieHooks.Apply();
 
+            BatFlyHooks.Hooks.Apply();
+            BatFlyHooks.ILHooks.Apply();
+
             BigSpiderHooks.Hooks.Apply();
             BigSpiderHooks.ILHooks.Apply();
 
@@ -96,23 +103,20 @@ public class Incapacitation : BaseUnityPlugin
             EggBugHooks.Hooks.Apply();
             EggBugHooks.ILHooks.Apply();
 
-            LanternMouseHooks.Hooks.Apply();
-            LanternMouseHooks.ILHooks.Apply();
+            //LanternMouseHooks.Hooks.Apply();
+            //LanternMouseHooks.ILHooks.Apply();
 
             LizardHooks.Hooks.Apply();
             LizardHooks.ILHooks.Apply();
 
-            NeedleWormHooks.Hooks.Apply();
-            NeedleWormHooks.ILHooks.Apply();
-
-            PlayerHooks.Hooks.Apply();
-            PlayerHooks.ILHooks.Apply();
+            //NeedleWormHooks.Hooks.Apply();
+            //NeedleWormHooks.ILHooks.Apply();
 
             ScavengerHooks.Hooks.Apply();
             ScavengerHooks.ILHooks.Apply();
 
-            TubeWormHooks.Hooks.Apply();
-            TubeWormHooks.ILHooks.Apply();
+            SlugcatHooks.Hooks.Apply();
+            SlugcatHooks.ILHooks.Apply();
 
             VultureHooks.Hooks.Apply();
             VultureHooks.ILHooks.Apply();
@@ -180,10 +184,12 @@ public class Incapacitation : BaseUnityPlugin
                     data.inconCycle = CycleNum(creature);
 
                     creature.realizedCreature.Die();
+
+                    InconAct(data);
                 }
             }
 
-            if (Input.GetKey("m"))
+            if (false && Input.GetKey("m"))
             {
                 List<AbstractCreature> list = new(self.abstractCreature.Room.creatures);
                 foreach (AbstractCreature creature in list)
@@ -225,6 +231,11 @@ public class Incapacitation : BaseUnityPlugin
     public static bool IsUncon(Creature self)
     {
         return IsComa(self) && inconstorage.TryGetValue(self.abstractCreature, out InconData data) && data.isUncon;
+    }
+
+    public static bool BreathCheck(Creature self)
+    {
+        return ShadowOfOptions.breath.Value != "Disabled" && IsComa(self) && (ShadowOfOptions.breath.Value == "Incapacitated or Unconscious" || IsUncon(self) && ShadowOfOptions.breath.Value == "Unconscious Only");
     }
 
     public static void PreViolenceCheck(Creature receiver, InconData data)
@@ -355,15 +366,19 @@ public class Incapacitation : BaseUnityPlugin
     public static bool IsAbstractCreatureValid(AbstractCreature self)
     {
         if (self != null && (
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Fly ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider && ShadowOfOptions.spid_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Centipede && ShadowOfOptions.centi_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.CicadaA && ShadowOfOptions.cic_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Deer && ShadowOfOptions.deer_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.DropBug && ShadowOfOptions.drop_state.Value != "Disabled" ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.EggBug && ShadowOfOptions.egg_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LizardTemplate && ShadowOfOptions.liz_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && ShadowOfOptions.scav_state.Value != "Disabled" ||
             (self.creatureTemplate.type == CreatureTemplate.Type.Slugcat || ModManager.MSC && self.creatureTemplate.type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC) && ShadowOfOptions.slug_state.Value != "Disabled" || 
-            (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Disabled"))
+            (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Disabled" ||
+            (ModManager.MSC && (
+            self.creatureTemplate.TopAncestor().type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.FireBug && ShadowOfOptions.fire_state.Value != "Disabled"))))
         {
             return true;
         }
@@ -378,9 +393,12 @@ public class Incapacitation : BaseUnityPlugin
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Centipede && ShadowOfOptions.centi_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.CicadaA && ShadowOfOptions.cic_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.DropBug && ShadowOfOptions.drop_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.EggBug && ShadowOfOptions.egg_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LizardTemplate && ShadowOfOptions.liz_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && (!ModManager.MSC || self.creatureTemplate.type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.ScavengerKing) && ShadowOfOptions.scav_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
-            ModManager.MSC && self.creatureTemplate.type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC && ShadowOfOptions.slug_state.Value == "Incapacitation and Den Revive"))
+            ModManager.MSC && self.creatureTemplate.type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC && ShadowOfOptions.slug_state.Value == "Incapacitation and Den Revive" ||
+            (ModManager.MSC && (
+            self.creatureTemplate.TopAncestor().type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.FireBug && ShadowOfOptions.fire_state.Value == "Incapacitation, Cheating Death and Den Revive"))))
         {
             return true;
         }
@@ -396,9 +414,12 @@ public class Incapacitation : BaseUnityPlugin
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.CicadaA && ShadowOfOptions.cic_state.Value != "Disabled" && ShadowOfOptions.cic_state.Value != "Incapacitation Only" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Deer && ShadowOfOptions.deer_state.Value == "Incapacitation and Cheating Death" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.DropBug && ShadowOfOptions.drop_state.Value != "Disabled" && ShadowOfOptions.drop_state.Value != "Incapacitation Only" ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.EggBug && ShadowOfOptions.egg_state.Value != "Disabled" && ShadowOfOptions.egg_state.Value != "Incapacitation Only" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LizardTemplate && ShadowOfOptions.liz_state.Value != "Disabled" && ShadowOfOptions.liz_state.Value != "Incapacitation Only" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && (!ModManager.MSC || self.creatureTemplate.type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.ScavengerKing) && ShadowOfOptions.scav_state.Value != "Disabled" && ShadowOfOptions.scav_state.Value != "Incapacitation Only" ||
-            (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Incapacitation and Cheating Death"))
+            (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Incapacitation and Cheating Death" ||
+            (ModManager.MSC && (
+            self.creatureTemplate.TopAncestor().type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.FireBug && ShadowOfOptions.fire_state.Value != "Disabled" && ShadowOfOptions.fire_state.Value != "Incapacitation Only"))))
         {
             return true;
         }

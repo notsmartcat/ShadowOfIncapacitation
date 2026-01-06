@@ -99,10 +99,8 @@ internal class ILHooks
     {
         if (ShadowOfOptions.spid_mother.Value && ShadowOfOptions.spid_state.Value != "Disabled" && inconstorage.TryGetValue(self.abstractCreature, out InconData data) && data.isAlive)
         {
-            Debug.Log("Spider mother not spew");
             return false;
         }
-        Debug.Log("Spider mother spew");
         return true;
     }
 
@@ -471,6 +469,26 @@ internal class ILHooks
         }
         #endregion
 
+        #region Footing
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<BigSpider>("get_Footing"),
+            x => x.MatchBrfalse(out target)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(IsComa);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate Footing!");
+        }
+        #endregion
+
         #region NoStun
         if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
         {
@@ -488,6 +506,40 @@ internal class ILHooks
         else
         {
             Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate NoStun!");
+        }
+        #endregion
+
+        #region Flee
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<BigSpider>("get_Footing"),
+            x => x.MatchBrtrue(out _),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILBigSpiderUpdate Flee target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _)
+        }))
+        {
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(IsComa);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate Flee!");
         }
         #endregion
     }

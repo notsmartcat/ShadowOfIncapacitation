@@ -26,25 +26,19 @@ internal class Hooks
     {
         orig(self, sLeaser, rCam, timeStacker, camPos);
 
-        if (!breathstorage.TryGetValue(self, out BreathData data) || !IsUncon(self.vulture))
+        if (!breathstorage.TryGetValue(self, out BreathData data) || self.culled)
         {
             return;
         }
 
-        float num4 = (Mathf.Sin(Mathf.Lerp(data.lastBreath, data.breath, timeStacker) * 3.1415927f * 2f) + 1f) * 0.5f;
-
-        float num6 = (self.IsKing ? 1.2f : 1f);
-
-        num6 *= 1f + num4 * (float)3 * 0.1f * 0.5f;
-
-        sLeaser.sprites[self.BodySprite].scale = num6;
+        sLeaser.sprites[self.BodySprite].scale = (self.IsKing ? 1.2f : 1f) * MiscHooks.ApplyBreath(data, timeStacker);
     }
 
     static void VultureGraphicsUpdate(On.VultureGraphics.orig_Update orig, VultureGraphics self)
     {
         orig(self);
 
-        if (IsUncon(self.vulture))
+        if (BreathCheck(self.vulture))
         {
             MiscHooks.UpdateBreath(self);
         }
