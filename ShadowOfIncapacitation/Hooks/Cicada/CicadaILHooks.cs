@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System;
-using Unity.Mathematics;
+
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation.CicadaHooks;
@@ -15,6 +15,85 @@ internal class ILHooks
         IL.CicadaGraphics.Update += ILCicadaGraphicsUpdate;
     }
 
+    #region Cicada
+    static void ILCicadaUpdate(ILContext il)
+    {
+        ILCursor val = new(il);
+        ILLabel target = null;
+
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[6]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<Creature>("get_State"),
+            x => x.MatchIsinst(typeof(HealthState)),
+            x => x.MatchCallvirt<HealthState>("get_health"),
+            x => x.MatchLdcR4(0.5f),
+            x => x.MatchBgeUn(out target),
+        }))
+        {
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(IsComa);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILCicadaUpdate!");
+        }
+
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCallvirt<Creature>("Die")
+        }))
+        {
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(delegate (Creature creature)
+            {
+                ILHooksMisc.TryAddKillFeedEntry(creature, "Bleed");
+            });
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILCicadaUpdate Bleed!");
+        }
+
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<Cicada>("flying"),
+            x => x.MatchBrtrue(out _),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILCicadaUpdate target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdnull(),
+            x => x.MatchStfld<Cicada>("stickyCling"),
+        }))
+        {
+            //val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILCicadaUpdate!");
+        }
+    }
+    #endregion
+
+    #region CicadaGraphics
     static void ILCicadaGraphicsUpdate(ILContext il)
     {
         ILCursor val = new(il);
@@ -258,90 +337,5 @@ internal class ILHooks
         }
         #endregion
     }
-
-    public static void CicadaGraphicsUpdate(Cicada self, int k, int l)
-    {
-        if (!inconstorage.TryGetValue(self.abstractCreature, out InconData data) || !IsIncon(self) || !self.flying || (self.graphicsModule as CicadaGraphics).wingDeployment[k, l] != 0.9f)
-        {
-            return;
-        }
-
-        (self.graphicsModule as CicadaGraphics).wingDeployment[k, l] = 1f;
-    }
-
-    static void ILCicadaUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-        ILLabel target = null;
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[6]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<Creature>("get_State"),
-            x => x.MatchIsinst(typeof(HealthState)),
-            x => x.MatchCallvirt<HealthState>("get_health"),
-            x => x.MatchLdcR4(0.5f),
-            x => x.MatchBgeUn(out target),
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(IsComa);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILCicadaUpdate!");
-        }
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCallvirt<Creature>("Die")
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(delegate (Creature creature)
-            {
-                ILHooksMisc.TryAddKillFeedEntry(creature, "Bleed");
-            });
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILCicadaUpdate Bleed!");
-        }
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<Cicada>("flying"),
-            x => x.MatchBrtrue(out _),
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILCicadaUpdate target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdnull(),
-            x => x.MatchStfld<Cicada>("stickyCling"),
-        }))
-        {
-            //val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILCicadaUpdate!");
-        }
-    }
+    #endregion
 }

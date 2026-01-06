@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System;
+
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation.LizardHooks;
@@ -9,25 +10,56 @@ internal class ILHooks
 {
     public static void Apply()
     {
-        IL.LizardGraphics.Update += ILLizardGraphicsUpdate;
-
-        IL.LizardGraphics.DrawSprites += ILLizardGraphicsDrawSprites;
-
-        IL.LizardVoice.MakeSound_Emotion_float += ILLizardVoiceMakeSound;
-
         IL.Lizard.ActAnimation += ILLizardActAnimation;
 
         IL.LizardAI.AggressiveBehavior += ILLizardAIAggressiveBehavior;
 
+        IL.LizardGraphics.DrawSprites += ILLizardGraphicsDrawSprites;
+        IL.LizardGraphics.Update += ILLizardGraphicsUpdate;
+
+        IL.LizardVoice.MakeSound_Emotion_float += ILLizardVoiceMakeSound;
+
+
         //IL.Watcher.LizardBlizzardModule.Update += ILLizardBlizzardModuleUpdate;
-
         //IL.Watcher.LizardRotModule.Update += ILLizardRotModuleUpdate;
-
         //IL.Watcher.LizardRotModule.Violence += ILLizardRotModuleViolence;
-
         //IL.LizardJumpModule.Update += ILLizardJumpModuleUpdate;
     }
 
+    #region Lizard
+    static void ILLizardActAnimation(ILContext il)
+    {
+        ILCursor val = new(il);
+        ILLabel target = null;
+
+        #region JawReadyForBite
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<Lizard>("AI"),
+            x => x.MatchLdfld<LizardAI>("focusCreature"),
+            x => x.MatchBrfalse(out target),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(LizardActAnimation);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardActAnimation!");
+        }
+        #endregion
+    }
+    public static bool LizardActAnimation(Creature self)
+    {
+        return IsIncon(self) && !ShadowOfOptions.liz_fear_move.Value;
+    }
+    #endregion
+
+    #region LizardAI
     static void ILLizardAIAggressiveBehavior(ILContext il)
     {
         ILCursor val = new(il);
@@ -72,254 +104,13 @@ internal class ILHooks
             Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardAIAggressiveBehavior!");
         }
     }
-
     public static bool LizardAIAggressiveBehavior(Creature self)
     {
         return IsIncon(self) && ShadowOfOptions.liz_attack.Value && ShadowOfOptions.liz_attack_move.Value;
     }
+    #endregion
 
-    static void ILLizardActAnimation(ILContext il)
-    {
-        ILCursor val = new(il);
-        ILLabel target = null;
-
-        #region JawReadyForBite
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<Lizard>("AI"),
-            x => x.MatchLdfld<LizardAI>("focusCreature"),
-            x => x.MatchBrfalse(out target),
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(LizardActAnimation);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardActAnimation!");
-        }
-        #endregion
-    }
-
-    public static bool LizardActAnimation(Creature self)
-    {
-        return IsIncon(self) && !ShadowOfOptions.liz_fear_move.Value;
-    }
-
-    static void ILLizardJumpModuleUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-        ILLabel target = null;
-
-        #region Start
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<LizardJumpModule>("lizard"),
-            x => x.MatchCallvirt<Creature>("get_dead"),
-            x => x.MatchBrfalse(out target),
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<LizardJumpModule>(OpCodes.Ldfld, "lizard");
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brfalse_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleViolence target!");
-        }
-        #endregion
-
-        #region Start
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[6]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<LizardJumpModule>("lizard"),
-            x => x.MatchLdfld<Lizard>("animation"),
-            x => x.MatchLdsfld<Lizard.Animation>("PrepareToJump"),
-            x => x.MatchCall("ExtEnum`1<Lizard/Animation>", "op_Equality"),
-            x => x.MatchBrtrue(out _),
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleViolence target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<LizardJumpModule>("lizard"),
-            x => x.MatchCallvirt<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _),
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<LizardJumpModule>(OpCodes.Ldfld, "lizard");
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleViolence target!");
-        }
-        #endregion
-    }
-
-    static void ILLizardRotModuleViolence(ILContext il)
-    {
-        ILCursor val = new(il);
-        ILLabel target = null;
-
-        #region Start
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<Watcher.LizardRotModule>("vocalizeSoundCooldown"),
-            x => x.MatchLdcI4(0),
-            x => x.MatchBgt(out _),
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleViolence target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<Watcher.LizardRotModule>("lizard"),
-            x => x.MatchCallvirt<Creature>("get_dead"),
-            x => x.MatchBrtrue(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<Watcher.LizardRotModule>(OpCodes.Ldfld, "lizard");
-            val.EmitDelegate(ILLizardRotModule);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILLizardRotModuleViolence!");
-        }
-        #endregion
-    }
-
-    static void ILLizardRotModuleUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-        ILLabel target = null;
-
-        #region Start
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<Watcher.LizardRotModule>("transforming"),
-            x => x.MatchBrfalse(out _),
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleUpdate target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<Watcher.LizardRotModule>("lizard"),
-            x => x.MatchCallvirt<Creature>("get_dead"),
-            x => x.MatchBrtrue(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<Watcher.LizardRotModule>(OpCodes.Ldfld, "lizard");
-            val.EmitDelegate(ILLizardRotModule);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleUpdate!");
-        }
-        #endregion
-
-        #region bubble
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[7]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<Watcher.LizardRotModule>("lizard"),
-            x => x.MatchCallvirt<Lizard>("get_LizardState"),
-            x => x.MatchLdfld<LizardState>("rotType"),
-            x => x.MatchLdsfld<LizardState.RotType>("Full"),
-            x => x.MatchCall("ExtEnum`1<LizardState/RotType>", "op_Equality"),
-            x => x.MatchBrtrue(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleUpdate sound target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<Watcher.LizardRotModule>("lizard"),
-            x => x.MatchCallvirt<Creature>("get_dead"),
-            x => x.MatchBrtrue(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<Watcher.LizardRotModule>(OpCodes.Ldfld, "lizard");
-            val.EmitDelegate(ILLizardRotModule);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleUpdate sound!");
-        }
-        #endregion
-    }
-
-    static bool ILLizardRotModule(Creature self)
-    {
-        if (ShadowOfOptions.liz_rot.Value && IsIncon(self))
-        {
-            return true;
-        }
-
-        return false;
-    }
-
+    #region LizardGraphics
     static void ILLizardGraphicsDrawSprites(ILContext il)
     {
         ILCursor val = new(il);
@@ -406,7 +197,6 @@ internal class ILHooks
         }
         #endregion
     }
-
     static void ILLizardGraphicsUpdate(ILContext il)
     {
         ILCursor val = new(il);
@@ -531,7 +321,7 @@ internal class ILHooks
         }
         #endregion
         */
-   
+
         #region tailDirection
         if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
         {
@@ -576,7 +366,7 @@ internal class ILHooks
             x => x.MatchLdarg(0),
             x => x.MatchLdfld<LizardGraphics>("head"),
             x => x.MatchCallvirt<BodyPart>("Update")
-        })){}
+        })) { }
         else
         {
             Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardGraphicsUpdate head!");
@@ -620,7 +410,9 @@ internal class ILHooks
         }
         #endregion
     }
+    #endregion
 
+    #region LizardVoice
     static void ILLizardVoiceMakeSound(ILContext il)
     {
         ILCursor val = new(il);
@@ -646,12 +438,219 @@ internal class ILHooks
             Incapacitation.Logger.LogInfo(all + "Could not find match ILLizardVoiceMakeSound!");
         }
     }
-
     public static bool LizardVoiceMakeSound(Creature self)
     {
         return ShadowOfOptions.liz_voice.Value && IsIncon(self);
     }
+    #endregion
 
+    #region LizardUnused
+    static void ILLizardJumpModuleUpdate(ILContext il)
+    {
+        ILCursor val = new(il);
+        ILLabel target = null;
+
+        #region Start
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<LizardJumpModule>("lizard"),
+            x => x.MatchCallvirt<Creature>("get_dead"),
+            x => x.MatchBrfalse(out target),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<LizardJumpModule>(OpCodes.Ldfld, "lizard");
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brfalse_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleViolence target!");
+        }
+        #endregion
+
+        #region Start
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[6]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<LizardJumpModule>("lizard"),
+            x => x.MatchLdfld<Lizard>("animation"),
+            x => x.MatchLdsfld<Lizard.Animation>("PrepareToJump"),
+            x => x.MatchCall("ExtEnum`1<Lizard/Animation>", "op_Equality"),
+            x => x.MatchBrtrue(out _),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleViolence target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<LizardJumpModule>("lizard"),
+            x => x.MatchCallvirt<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<LizardJumpModule>(OpCodes.Ldfld, "lizard");
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleViolence target!");
+        }
+        #endregion
+    }
+    static void ILLizardRotModuleViolence(ILContext il)
+    {
+        ILCursor val = new(il);
+        ILLabel target = null;
+
+        #region Start
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<Watcher.LizardRotModule>("vocalizeSoundCooldown"),
+            x => x.MatchLdcI4(0),
+            x => x.MatchBgt(out _),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleViolence target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<Watcher.LizardRotModule>("lizard"),
+            x => x.MatchCallvirt<Creature>("get_dead"),
+            x => x.MatchBrtrue(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<Watcher.LizardRotModule>(OpCodes.Ldfld, "lizard");
+            val.EmitDelegate(ILLizardRotModule);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILLizardRotModuleViolence!");
+        }
+        #endregion
+    }
+    static void ILLizardRotModuleUpdate(ILContext il)
+    {
+        ILCursor val = new(il);
+        ILLabel target = null;
+
+        #region Start
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<Watcher.LizardRotModule>("transforming"),
+            x => x.MatchBrfalse(out _),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleUpdate target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<Watcher.LizardRotModule>("lizard"),
+            x => x.MatchCallvirt<Creature>("get_dead"),
+            x => x.MatchBrtrue(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<Watcher.LizardRotModule>(OpCodes.Ldfld, "lizard");
+            val.EmitDelegate(ILLizardRotModule);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleUpdate!");
+        }
+        #endregion
+
+        #region bubble
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[7]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<Watcher.LizardRotModule>("lizard"),
+            x => x.MatchCallvirt<Lizard>("get_LizardState"),
+            x => x.MatchLdfld<LizardState>("rotType"),
+            x => x.MatchLdsfld<LizardState.RotType>("Full"),
+            x => x.MatchCall("ExtEnum`1<LizardState/RotType>", "op_Equality"),
+            x => x.MatchBrtrue(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleUpdate sound target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<Watcher.LizardRotModule>("lizard"),
+            x => x.MatchCallvirt<Creature>("get_dead"),
+            x => x.MatchBrtrue(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<Watcher.LizardRotModule>(OpCodes.Ldfld, "lizard");
+            val.EmitDelegate(ILLizardRotModule);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILLizardRotModuleUpdate sound!");
+        }
+        #endregion
+    }
+    static bool ILLizardRotModule(Creature self)
+    {
+        if (ShadowOfOptions.liz_rot.Value && IsIncon(self))
+        {
+            return true;
+        }
+
+        return false;
+    }
     static void ILLizardBlizzardModuleUpdate(ILContext il)
     {
         ILCursor val = new(il);
@@ -718,4 +717,5 @@ internal class ILHooks
         }
         #endregion
     }
+    #endregion
 }

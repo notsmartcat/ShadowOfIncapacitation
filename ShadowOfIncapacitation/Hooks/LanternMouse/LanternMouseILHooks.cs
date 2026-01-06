@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System;
+
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation.LanternMouseHooks;
@@ -12,6 +13,7 @@ internal class ILHooks
         IL.LanternMouse.Update += ILLanternMouseUpdate;
     }
 
+    #region LanternMouse
     static void ILLanternMouseUpdate(ILContext il)
     {
         ILCursor val = new(il);
@@ -86,4 +88,5 @@ internal class ILHooks
             Incapacitation.Logger.LogInfo(all + "Could not find match ILLanternMouseUpdate Battery!");
         }
     }
+    #endregion
 }

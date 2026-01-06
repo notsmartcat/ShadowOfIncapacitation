@@ -19,18 +19,11 @@ internal class MiscHooks
         On.CreatureState.LoadFromString += CreatureState_LoadFromString;
         #endregion
 
-        On.Tracker.CreatureNoticed += TrackerCreatureNoticed;
-
-        #region Creature Hooks
         On.Creature.Violence += CreatureViolence;
-        #endregion
 
         On.StuckTracker.Utility += StuckTrackerUtility;
-    }
 
-    static float StuckTrackerUtility(On.StuckTracker.orig_Utility orig, StuckTracker self)
-    {
-        return self.AI.creature.realizedCreature != null && IsComa(self.AI.creature.realizedCreature) ? 0 : orig(self);
+        On.Tracker.CreatureNoticed += TrackerCreatureNoticed;
     }
 
     #region Apply Creature
@@ -83,16 +76,12 @@ internal class MiscHooks
 
             if (!self.dead)
             {
-                //ViolenceCheck(self, data, data.lastDamageType);
-
                 data.cheatDeathChance = UnityEngine.Random.Range(0, 101);
             }
 
             if (!data.isAlive || self.State is HealthState healthstate && (healthstate.health <= ShadowOfOptions.insta_die_threshold.Value || healthstate.health <= data.dieHealthThreshold) || self.State is PlayerState playerState && playerState.permanentDamageTracking >= 0.8)
             {
                 data.actuallyDead = true;
-
-                //self.dead = false;
 
                 if (self.abstractCreature.state != null)
                     self.abstractCreature.state.alive = true;
@@ -106,8 +95,6 @@ internal class MiscHooks
             {
                 if (ShadowOfOptions.incon_chance_cheat_death.Value < data.cheatDeathChance)
                 {
-                    //self.dead = false;
-
                     if (self.abstractCreature.state != null)
                         self.abstractCreature.state.alive = false;
 
@@ -119,8 +106,6 @@ internal class MiscHooks
                 else
                 {
                     data.actuallyDead = true;
-
-                    //self.dead = false;
 
                     if (self.abstractCreature.state != null)
                         self.abstractCreature.state.alive = true;
@@ -135,13 +120,11 @@ internal class MiscHooks
             {
                 if (ShadowOfOptions.uncon_chance_cheat_death.Value < data.cheatDeathChance)
                 {
-                    //self.dead = false;
-
                     if (self.abstractCreature.state != null)
                         self.abstractCreature.state.alive = false;
 
                     if (ShadowOfOptions.debug_logs.Value)
-                        Debug.Log(all + self + " is Unconsious, it will survive the cycle");
+                        Debug.Log(all + self + " is Unconscious, it will survive the cycle");
 
                     orig(self);
                 }
@@ -149,13 +132,11 @@ internal class MiscHooks
                 {
                     data.actuallyDead = true;
 
-                    //self.dead = false;
-
                     if (self.abstractCreature.state != null)
                         self.abstractCreature.state.alive = true;
 
                     if (ShadowOfOptions.debug_logs.Value)
-                        Debug.Log(all + self + " is Unconsious, it will not survive the cycle");
+                        Debug.Log(all + self + " is Unconscious, it will not survive the cycle");
 
                     orig(self);
                 }
@@ -164,23 +145,23 @@ internal class MiscHooks
             {
                 data.actuallyDead = true;
 
-                //self.dead = false;
-
                 if (self.abstractCreature.state != null)
                     self.abstractCreature.state.alive = true;
 
                 if (ShadowOfOptions.debug_logs.Value)
-                    Debug.Log(all + self + " is neither Incapacitated nor Unconsious, it will not survive the cycle");
+                    Debug.Log(all + self + " is neither Incapacitated nor Unconscious, it will not survive the cycle");
 
                 orig(self);
             }
         }
         catch (Exception e) { Incapacitation.Logger.LogError(e); }
 
+        #region Local
         bool HasLizardData()
         {
             return ShadowOfLizards.ShadowOfLizards.lizardstorage.TryGetValue(self.abstractCreature, out _);
         }
+        #endregion
     }
 
     static string SaveStateSaveAbstractCreature(On.SaveState.orig_AbstractCreatureToStringStoryWorld_AbstractCreature_WorldCoordinate orig, AbstractCreature self, WorldCoordinate cc)
@@ -202,9 +183,7 @@ internal class MiscHooks
                 savedData["IncapacitationOfactuallyDead"] = "Dead";
 
                 if (ShadowOfOptions.debug_logs.Value)
-                {
                     Debug.Log(all + self + " is actuallyDead");
-                }
 
                 return orig(self, cc);
             }
@@ -398,74 +377,6 @@ internal class MiscHooks
     }
     #endregion
 
-    static Tracker.CreatureRepresentation TrackerCreatureNoticed(On.Tracker.orig_CreatureNoticed orig, Tracker self, AbstractCreature crit)
-    {
-        if (self.AI.creature.realizedCreature is not Lizard liz || IsIncon(liz))
-        {
-            return orig(self, crit);
-        }
-
-        if (self.AI.StaticRelationship(crit).type == CreatureTemplate.Relationship.Type.DoesntTrack)
-        {
-            return null;
-        }
-
-        try
-        {
-            bool flag = false;
-            if (self.AI.creature.creatureTemplate.grasps > 0)
-            {
-                foreach (AbstractPhysicalObject.AbstractObjectStick abstractObjectStick in self.AI.creature.stuckObjects)
-                {
-                    if (abstractObjectStick.A == crit || abstractObjectStick.B == crit)
-                    {
-                        flag = true;
-                        break;
-                    }
-                }
-            }
-            Tracker.CreatureRepresentation creatureRepresentation = self.AI.CreateTrackerRepresentationForCreature(crit);
-            if (creatureRepresentation == null)
-            {
-                return null;
-            }
-            self.AI.CreatureSpotted(!flag, creatureRepresentation);
-            if (self.AI.relationshipTracker != null)
-            {
-                self.AI.relationshipTracker.EstablishDynamicRelationship(creatureRepresentation);
-            }
-            if (creatureRepresentation != null)
-            {
-                self.creatures.Add(creatureRepresentation);
-                if (self.creatures.Count > self.maxTrackedCreatures)
-                {
-                    float num = float.MaxValue;
-                    Tracker.CreatureRepresentation creatureRepresentation2 = null;
-                    foreach (Tracker.CreatureRepresentation creatureRepresentation3 in self.creatures)
-                    {
-                        float num2 = ((creatureRepresentation3.dynamicRelationship != null) ? creatureRepresentation3.dynamicRelationship.currentRelationship.intensity : self.AI.creature.creatureTemplate.CreatureRelationship(creatureRepresentation3.representedCreature.creatureTemplate).intensity) * 100000f + (creatureRepresentation3.VisualContact ? 2f : 1f) / (1f + Vector2.Distance(IntVector2.ToVector2(creatureRepresentation3.BestGuessForPosition().Tile), IntVector2.ToVector2(self.AI.creature.pos.Tile)));
-                        num2 /= Mathf.Lerp((float)creatureRepresentation3.forgetCounter, 100f, 0.7f);
-                        if (num2 < num)
-                        {
-                            num = num2;
-                            creatureRepresentation2 = creatureRepresentation3;
-                        }
-                    }
-                    if (creatureRepresentation2 == creatureRepresentation)
-                    {
-                        creatureRepresentation = null;
-                    }
-                    creatureRepresentation2.Destroy();
-                }
-            }
-            return creatureRepresentation;
-        }
-        catch (Exception e) { Incapacitation.Logger.LogError(e); }
-
-        return orig(self, crit);
-    }
-
-    #region Creature Hooks
     static void CreatureViolence(On.Creature.orig_Violence orig, Creature self, BodyChunk source, Vector2? directionAndMomentum, BodyChunk hitChunk, PhysicalObject.Appendage.Pos hitAppendage, Creature.DamageType type, float damage, float stunBonus)
     {
         if (!inconstorage.TryGetValue(self.abstractCreature, out InconData data) || type == null)
@@ -475,102 +386,72 @@ internal class MiscHooks
             return;
         }
 
-        bool sourceOwnerFlag = source != null && source.owner != null;
-
-        if (data.inconCycle != CycleNum(self.abstractCreature))
-            PreViolenceCheck(self, data);
-
-        orig(self, source, directionAndMomentum, hitChunk, hitAppendage, type, damage, stunBonus);
-
-        #region lastDamageType
-        data.lastDamageType = type.ToString();
-
-        if (type == Creature.DamageType.Bite || type == Creature.DamageType.Stab)
+        try
         {
-            data.lastDamageType = "Stab";
-        }
+            bool sourceOwnerFlag = source != null && source.owner != null;
 
-        if (sourceOwnerFlag && source.owner is DartMaggot)
-        {
-            data.lastDamageType = "Uncon";
-        }
-        #endregion
+            bool sourceValidTypeFlag = source == null || source != null && (source.owner == null || (source.owner != null && source.owner is not Leech && source.owner is not SporePlant.AttachedBee));
 
-        if (data.returnToDen && sourceOwnerFlag && source.owner is Player)
-        {
-            data.returnToDen = false;
-        }
+            if (data.inconCycle != CycleNum(self.abstractCreature))
+                PreViolenceCheck(self, data);
 
-        
-        if (IsComa(self) && type != Creature.DamageType.Blunt && (self.State is HealthState healthstate && (healthstate.health <= ShadowOfOptions.insta_die_threshold.Value || healthstate.health <= data.dieHealthThreshold) || self.State is not HealthState && UnityEngine.Random.Range(0, 100) < DieChance() || self.State is PlayerState playerState && playerState.permanentDamageTracking >= 0.8))
-        {
-            data.isAlive = false;
+            orig(self, source, directionAndMomentum, hitChunk, hitAppendage, type, damage, stunBonus);
 
-            self.Die();
+            #region lastDamageType
+            data.lastDamageType = type.ToString();
 
-            if (ShadowOfOptions.debug_logs.Value)
-                Debug.Log(all + self + " reached the insta die threshold and died");
-
-            return;
-        }
-        
-        if (data.inconCycle != CycleNum(self.abstractCreature))
-        {
-            PostViolenceCheck(self, data, type.ToString(), sourceOwnerFlag && source.owner is Creature crit ? crit : null);
-            return;
-        }
-
-        if (IsInconBase(self) && hitChunk != null && (sourceOwnerFlag && source.owner is DartMaggot || Head() && UnityEngine.Random.Range(0, 100) < UnconChance() || type == Creature.DamageType.Blunt && (self.State is HealthState healthstate2 && healthstate2.health <= (data.healthThreshold + data.dieHealthThreshold) / (Head() ? 2 : 1) || self.State is PlayerState playerState2 && playerState2.permanentDamageTracking >= (Head() ? 0.5 : 1.0))))
-        {
-            data.isUncon = true;
-
-            self.Die();
-
-            if (ShadowOfOptions.debug_logs.Value)
-                Debug.Log(all + self + " was knocked Uncontious");
-        }
-
-        if (IsIncon(self))
-        {
-            InconAct(data);
-        }
-        
-        int UnconChance()
-        {
-            int chance;
-
-            switch (data.lastDamageType)
+            if (type == Creature.DamageType.Bite || type == Creature.DamageType.Stab)
             {
-                case "Blunt":
-                    chance = ShadowOfOptions.uncon_chance_blunt.Value;
-                    if (ShadowOfOptions.debug_logs.Value)
-                        Debug.Log(all + self + " Blunt " + chance + " chance to uncon");
-                    break;
-                case "Stab":
-                    chance = ShadowOfOptions.uncon_chance_stab.Value;
-                    if (ShadowOfOptions.debug_logs.Value)
-                        Debug.Log(all + self + " Stab " + chance + " chance to uncon");
-                    break;
-                case "Explosion":
-                    chance = ShadowOfOptions.uncon_chance_explosion.Value;
-                    if (ShadowOfOptions.debug_logs.Value)
-                        Debug.Log(all + self + " Explosion " + chance + " chance to uncon");
-                    break;
-                case "Electric":
-                    chance = ShadowOfOptions.uncon_chance_electric.Value;
-                    if (ShadowOfOptions.debug_logs.Value)
-                        Debug.Log(all + self + " Electric " + chance + " chance to uncon");
-                    break;
-                default:
-                    chance = 0;
-                    if (ShadowOfOptions.debug_logs.Value)
-                        Debug.Log(all + self + " Null " + chance + " chance to uncon");
-                    break;
+                data.lastDamageType = "Stab";
             }
 
-            return chance;
-        }
+            if (sourceOwnerFlag && source.owner is DartMaggot)
+            {
+                data.lastDamageType = "Uncon";
+            }
+            #endregion
 
+            if (data.returnToDen && sourceOwnerFlag && source.owner is Player)
+            {
+                data.returnToDen = false;
+            }
+
+            if (IsComa(self) && type != Creature.DamageType.Blunt && (self.State is HealthState healthstate && (healthstate.health <= ShadowOfOptions.insta_die_threshold.Value || healthstate.health <= data.dieHealthThreshold) || self.State is not HealthState && UnityEngine.Random.Range(0, 100) < DieChance() || self.State is PlayerState playerState && playerState.permanentDamageTracking >= 0.8))
+            {
+                data.isAlive = false;
+
+                self.Die();
+
+                if (ShadowOfOptions.debug_logs.Value)
+                    Debug.Log(all + self + " reached the insta die threshold and died");
+
+                return;
+            }
+
+            if (data.inconCycle != CycleNum(self.abstractCreature))
+            {
+                PostViolenceCheck(self, data, type.ToString(), sourceOwnerFlag && source.owner is Creature crit ? crit : null);
+                return;
+            }
+
+            if (IsInconBase(self) && sourceValidTypeFlag && hitChunk != null && (sourceOwnerFlag && source.owner is DartMaggot || Head() && UnityEngine.Random.Range(0, 100) < UnconChance(self, data) || type == Creature.DamageType.Blunt && (self.State is HealthState healthstate2 && healthstate2.health <= (data.healthThreshold + data.dieHealthThreshold) / (Head() ? 2 : 1) || self.State is PlayerState playerState2 && playerState2.permanentDamageTracking >= (Head() ? 0.5 : 1.0))))
+            {
+                data.isUncon = true;
+
+                self.Die();
+
+                if (ShadowOfOptions.debug_logs.Value)
+                    Debug.Log(all + self + " was knocked Uncontious");
+            }
+
+            if (IsIncon(self))
+            {
+                InconAct(data);
+            }
+        }
+        catch (Exception e) { Incapacitation.Logger.LogError(e); }
+
+        #region Local
         int DieChance()
         {
             int chance;
@@ -624,9 +505,85 @@ internal class MiscHooks
 
             return hitChunk.index == 0;
         }
+        #endregion
     }
-    #endregion
 
+    static float StuckTrackerUtility(On.StuckTracker.orig_Utility orig, StuckTracker self)
+    {
+        return self.AI.creature.realizedCreature != null && IsComa(self.AI.creature.realizedCreature) ? 0 : orig(self);
+    }
+
+    static Tracker.CreatureRepresentation TrackerCreatureNoticed(On.Tracker.orig_CreatureNoticed orig, Tracker self, AbstractCreature crit)
+    {
+        if (self.AI.creature.realizedCreature is not Lizard liz || IsIncon(liz))
+        {
+            return orig(self, crit);
+        }
+
+        if (self.AI.StaticRelationship(crit).type == CreatureTemplate.Relationship.Type.DoesntTrack)
+        {
+            return null;
+        }
+
+        try
+        {
+            bool flag = false;
+            if (self.AI.creature.creatureTemplate.grasps > 0)
+            {
+                foreach (AbstractPhysicalObject.AbstractObjectStick abstractObjectStick in self.AI.creature.stuckObjects)
+                {
+                    if (abstractObjectStick.A == crit || abstractObjectStick.B == crit)
+                    {
+                        flag = true;
+                        break;
+                    }
+                }
+            }
+
+            Tracker.CreatureRepresentation creatureRepresentation = self.AI.CreateTrackerRepresentationForCreature(crit);
+            if (creatureRepresentation == null)
+            {
+                return null;
+            }
+
+            self.AI.CreatureSpotted(!flag, creatureRepresentation);
+            if (self.AI.relationshipTracker != null)
+            {
+                self.AI.relationshipTracker.EstablishDynamicRelationship(creatureRepresentation);
+            }
+
+            if (creatureRepresentation != null)
+            {
+                self.creatures.Add(creatureRepresentation);
+                if (self.creatures.Count > self.maxTrackedCreatures)
+                {
+                    float num = float.MaxValue;
+                    Tracker.CreatureRepresentation creatureRepresentation2 = null;
+                    foreach (Tracker.CreatureRepresentation creatureRepresentation3 in self.creatures)
+                    {
+                        float num2 = ((creatureRepresentation3.dynamicRelationship != null) ? creatureRepresentation3.dynamicRelationship.currentRelationship.intensity : self.AI.creature.creatureTemplate.CreatureRelationship(creatureRepresentation3.representedCreature.creatureTemplate).intensity) * 100000f + (creatureRepresentation3.VisualContact ? 2f : 1f) / (1f + Vector2.Distance(IntVector2.ToVector2(creatureRepresentation3.BestGuessForPosition().Tile), IntVector2.ToVector2(self.AI.creature.pos.Tile)));
+                        num2 /= Mathf.Lerp((float)creatureRepresentation3.forgetCounter, 100f, 0.7f);
+                        if (num2 < num)
+                        {
+                            num = num2;
+                            creatureRepresentation2 = creatureRepresentation3;
+                        }
+                    }
+                    if (creatureRepresentation2 == creatureRepresentation)
+                    {
+                        creatureRepresentation = null;
+                    }
+                    creatureRepresentation2.Destroy();
+                }
+            }
+            return creatureRepresentation;
+        }
+        catch (Exception e) { Incapacitation.Logger.LogError(e); }
+
+        return orig(self, crit);
+    }
+
+    #region Misc
     public static void AIUpdate(ArtificialIntelligence self)
     {
         self.timeInRoom++;
@@ -675,20 +632,6 @@ internal class MiscHooks
                 }
             }
         }
-        if (self.ripplePathingTarget != null)
-        {
-            self.ripplePathingTime--;
-            if (self.ripplePathingTarget.slatedForDeletetion || self.ripplePathingTime <= 0)
-            {
-                self.ripplePathingTarget = null;
-                self.ripplePathingTime = 0;
-                return;
-            }
-            if (self.creature.realizedCreature != null && self.creature.realizedCreature.room != null)
-            {
-                self.SetDestination(self.creature.realizedCreature.room.GetWorldCoordinate(self.ripplePathingTarget.pos));
-            }
-        }
     }
 
     public static void UpdateBreath(GraphicsModule self)
@@ -713,4 +656,41 @@ internal class MiscHooks
 
         return 1f + breath * (float)3 * 0.1f * 0.5f;
     }
+
+    public static int UnconChance(Creature self, InconData data)
+    {
+        int chance;
+
+        switch (data.lastDamageType)
+        {
+            case "Blunt":
+                chance = ShadowOfOptions.uncon_chance_blunt.Value;
+                if (ShadowOfOptions.debug_logs.Value)
+                    Debug.Log(all + self + " Blunt " + chance + " chance to uncon");
+                break;
+            case "Stab":
+                chance = ShadowOfOptions.uncon_chance_stab.Value;
+                if (ShadowOfOptions.debug_logs.Value)
+                    Debug.Log(all + self + " Stab " + chance + " chance to uncon");
+                break;
+            case "Explosion":
+                chance = ShadowOfOptions.uncon_chance_explosion.Value;
+                if (ShadowOfOptions.debug_logs.Value)
+                    Debug.Log(all + self + " Explosion " + chance + " chance to uncon");
+                break;
+            case "Electric":
+                chance = ShadowOfOptions.uncon_chance_electric.Value;
+                if (ShadowOfOptions.debug_logs.Value)
+                    Debug.Log(all + self + " Electric " + chance + " chance to uncon");
+                break;
+            default:
+                chance = 0;
+                if (ShadowOfOptions.debug_logs.Value)
+                    Debug.Log(all + self + " Null " + chance + " chance to uncon");
+                break;
+        }
+
+        return chance;
+    }
+    #endregion
 }

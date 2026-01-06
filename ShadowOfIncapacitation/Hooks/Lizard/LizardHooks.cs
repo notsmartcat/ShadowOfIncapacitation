@@ -1,7 +1,6 @@
 ﻿using MonoMod.RuntimeDetour;
 using RWCustom;
 using System;
-using System.Drawing;
 using UnityEngine;
 
 using static Incapacitation.Incapacitation;
@@ -12,19 +11,16 @@ internal class Hooks
 {
     public static void Apply()
     {
-        On.LizardGraphics.Update += LizardGraphicsUpdate;
-
+        On.Lizard.ctor += NewLizard;
         On.Lizard.Update += LizardUpdate;
-
         On.Lizard.Violence += LizardViolence;
 
         On.LizardAI.Update += LizardAIUpdate;
-
         On.LizardAI.WantToStayInDenUntilEndOfCycle += LizardAIWantToStayInDenUntilEndOfCycle;
 
         On.LizardAI.LizardInjuryTracker.Utility += LizardInjuryTrackerUtility;
 
-        On.Lizard.ctor += NewLizard;
+        On.LizardGraphics.Update += LizardGraphicsUpdate;
 
         new Hook(
             typeof(LizardLimb).GetProperty(nameof(LizardLimb.health)).GetGetMethod(),
@@ -35,6 +31,7 @@ internal class Hooks
             typeof(Hooks).GetMethod(nameof(LizardIsWallClimber)));
     }
 
+    #region Lizard
     static void NewLizard(On.Lizard.orig_ctor orig, Lizard self, AbstractCreature abstractCreature, World world)
     {
         orig(self, abstractCreature, world);
@@ -60,65 +57,6 @@ internal class Hooks
                 Debug.Log(all + self + " and " + abstractCreature.world.game.Players[j] + " are now friends!");
         }
     }
-
-    static bool LizardAIWantToStayInDenUntilEndOfCycle(On.LizardAI.orig_WantToStayInDenUntilEndOfCycle orig, LizardAI self)
-    {
-        if (!inconstorage.TryGetValue(self.lizard.abstractCreature, out InconData data) || !data.returnToDen)
-        {
-            return orig(self);
-        }
-
-        return true;
-    }
-
-    static void LizardAIUpdate(On.LizardAI.orig_Update orig, LizardAI self)
-    {
-        orig(self);
-
-        if (self == null || self.lizard == null || self.lizard.abstractCreature == null || self.creature == null || self.creature.abstractAI == null || self.creature.abstractAI.destination == null || !inconstorage.TryGetValue(self.lizard.abstractCreature, out InconData data) || !data.returnToDen || self.denFinder == null || self.denFinder.denPosition == null)
-        {
-            return;
-        }
-
-        self.creature.abstractAI.SetDestination(self.denFinder.denPosition.Value);
-    }
-
-    static float LizardInjuryTrackerUtility(On.LizardAI.LizardInjuryTracker.orig_Utility orig, LizardAI.LizardInjuryTracker self)
-    {
-        return IsIncon(self.AI.creature.realizedCreature) ? 0 : orig(self);
-    }
-
-    public static float LizardLimbHealth(Func<LizardLimb, float> orig, LizardLimb self)
-    {
-        try
-        {
-            if (IsIncon(((LizardGraphics)self.owner).lizard) && inconstorage.TryGetValue(((LizardGraphics)self.owner).lizard.abstractCreature, out InconData data) && data.stunTimer > 0 && (!shadowOfLizardsCheck || !ShadowOfLizardsLegDead()))
-            {
-                return 1f;
-            }
-        }
-        catch (Exception e) { Incapacitation.Logger.LogError(e); }
-        return orig(self);
-
-        bool ShadowOfLizardsLegDead()
-        {
-            return ShadowOfLizards.ShadowOfLizards.lizardstorage.TryGetValue(((LizardGraphics)self.owner).lizard.abstractCreature, out ShadowOfLizards.ShadowOfLizards.LizardData data) && data.armState[self.limbNumber] != "Normal";
-        }
-    }
-
-    public static bool LizardIsWallClimber(Func<Lizard, bool> orig, Lizard self)
-    {
-        try
-        {
-            if (IsIncon(self) && inconstorage.TryGetValue(self.abstractCreature, out InconData data))
-            {
-                return ModManager.MMF && self.room != null && self.room.gravity <= global::Lizard.zeroGravityMovementThreshold;
-            }
-        }
-        catch (Exception e) { Incapacitation.Logger.LogError(e); }
-        return orig(self);
-    }
-
     static void LizardUpdate(On.Lizard.orig_Update orig, Lizard self, bool eu)
     {
         orig(self, eu);
@@ -127,8 +65,6 @@ internal class Hooks
         {
             return;
         }
-
-        LizardAI ai = self.AI;
 
         try
         {
@@ -160,6 +96,7 @@ internal class Hooks
                     num++;
                 }
             }
+
             if ((flag || flag2 || self.movementAnimation != null) && self.inAllowedTerrainCounter < 100)
             {
                 self.inAllowedTerrainCounter++;
@@ -190,10 +127,11 @@ internal class Hooks
                     self.inAllowedTerrainCounter = 0;
                 }
             }
-            self.applyGravity = (self.inAllowedTerrainCounter < self.lizardParams.regainFootingCounter || self.NoGripCounter > 10 || self.commitedToDropConnection != default(MovementConnection));
-            //self.swim = Mathf.Clamp(self.swim - 0.05f, 0f, 1f);
-            //ai.stuckTracker.satisfiedWithThisPosition = (self.swim > 0.5f);
+
+            self.applyGravity = (self.inAllowedTerrainCounter < self.lizardParams.regainFootingCounter || self.NoGripCounter > 10 || self.commitedToDropConnection != default);
+
             float num4 = self.ActAnimation();
+
             if (ModManager.DLCShared && self.Template.type == DLCSharedEnums.CreatureTemplateType.EelLizard && self.Submersion == 0f)
             {
                 bool flag4 = true;
@@ -212,7 +150,7 @@ internal class Hooks
                 }
             }
 
-            self.desperationSmoother = Custom.LerpAndTick(self.desperationSmoother, Mathf.Max((float)self.timeSpentTryingThisMove + Mathf.Lerp(-300f, 0f, num4), ai.stuckTracker.Utility() * 100f), 0.05f, 0.5f);
+            self.desperationSmoother = Custom.LerpAndTick(self.desperationSmoother, Mathf.Max((float)self.timeSpentTryingThisMove + Mathf.Lerp(-300f, 0f, num4), self.AI.stuckTracker.Utility() * 100f), 0.05f, 0.5f);
             if (self.desperationSmoother > Mathf.Lerp(40f, 10f, num4))
             {
                 self.bodyWiggleCounter += 2;
@@ -226,11 +164,12 @@ internal class Hooks
             self.timeInAnimation++;
             if (self.timeToRemainInAnimation > -1 && self.timeInAnimation > self.timeToRemainInAnimation)
             {
-                self.EnterAnimation(global::Lizard.Animation.Standard, true);
+                self.EnterAnimation(Lizard.Animation.Standard, true);
             }
-            if (self.bubble == 0 && UnityEngine.Random.value < 0.05f && UnityEngine.Random.value < ai.excitement && UnityEngine.Random.value < ai.excitement)
+
+            if (self.bubble == 0 && UnityEngine.Random.value < 0.05f && UnityEngine.Random.value < self.AI.excitement && UnityEngine.Random.value < self.AI.excitement)
             {
-                self.bubbleIntensity = ai.excitement * ai.excitement * UnityEngine.Random.value;
+                self.bubbleIntensity = self.AI.excitement * self.AI.excitement * UnityEngine.Random.value;
                 self.bubble = 1;
             }
 
@@ -241,20 +180,26 @@ internal class Hooks
         }
         catch (Exception e) { Incapacitation.Logger.LogError(e); }
 
+        #region Local
         void AI()
         {
+            LizardAI ai = self.AI;
+
             if (ai.behavior == LizardAI.Behavior.Flee && !RainWorldGame.RequestHeavyAi(self))
             {
                 return;
             }
+
             if (ModManager.MSC && self.LickedByPlayer != null)
             {
                 ai.tracker.SeeCreature(self.LickedByPlayer.abstractCreature);
             }
+
             if (ai.panic > 0)
             {
                 ai.panic--;
             }
+
             ai.timeInRoom++;
 
             ai.creature.state.socialMemory.EvenOutAllTemps(0.0005f);
@@ -271,6 +216,7 @@ internal class Hooks
             {
                 ai.lastDistressLength = 0;
             }
+
             ((ai.utilityComparer.GetUtilityTracker(ai.threatTracker).smoother as FloatTweener.FloatTweenUpAndDown).down as FloatTweener.FloatTweenBasic).speed = 1f / ((float)(ai.lastDistressLength + 20) * 3f);
             ai.utilityComparer.GetUtilityTracker(ai.agressionTracker).weight = (ai.creature.world.game.IsStorySession ? 0.25f : 0.125f) * self.LizardState.health;
             ai.utilityComparer.GetUtilityTracker(ai.rainTracker).weight = (ai.friendTracker.CareAboutRain() ? 0.9f : 0.1f);
@@ -278,7 +224,7 @@ internal class Hooks
 
             if (UnityEngine.Random.value < 0.0125f)
             {
-                if(ShadowOfOptions.liz_voice.Value)
+                if (ShadowOfOptions.liz_voice.Value)
                     self.voice.MakeSound(LizardVoice.Emotion.PainIdle, 1f - (self.State as LizardState).health);
 
                 if (UnityEngine.Random.value < 0.2f)
@@ -300,14 +246,17 @@ internal class Hooks
                     {
                         ai.panic += 2;
                     }
+
                     if (UnityEngine.Random.value < 0.05f && ai.threatTracker.mostThreateningCreature != null && ai.threatTracker.mostThreateningCreature.BestGuessForPosition().Tile.FloatDist(ai.creature.pos.Tile) < 15f)
                     {
                         InconAct(data);
                         self.EnterAnimation(global::Lizard.Animation.ThreatSpotted, false);
                     }
                 }
+
                 ai.runSpeed = Mathf.Lerp(ai.runSpeed, Mathf.Pow(ai.CombinedFear, 0.1f), 0.5f);
                 ai.focusCreature = ai.threatTracker.mostThreateningCreature;
+
                 if (self.graphicsModule != null)
                 {
                     (self.graphicsModule as LizardGraphics).lookPos = self.room.MiddleOfTile(ai.pathFinder.GetDestination);
@@ -320,7 +269,9 @@ internal class Hooks
                 {
                     ai.AggressiveBehavior(mostAttractivePrey, 0f);
                 }
+
                 ai.runSpeed = Mathf.Lerp(ai.runSpeed, Mathf.Max(ai.hunger, 0.3f), 0.1f);
+
                 if (ShadowOfOptions.liz_voice.Value && UnityEngine.Random.value < 0.0125f && !ai.lizard.safariControlled && ai.creature.creatureTemplate.type != CreatureTemplate.Type.BlackLizard)
                 {
                     ai.lizard.voice.MakeSound(LizardVoice.Emotion.BloodLust);
@@ -340,6 +291,7 @@ internal class Hooks
                     {
                         ai.idleCounter -= self.lizardParams.idleCounterSubtractWhenCloseToIdlePos;
                         ai.idleRestlessness--;
+
                         bool flag = (ai.idleCounter < 1 || ai.idleRestlessness > 0);
                         if (!flag && !ai.ComfortableIdlePosition())
                         {
@@ -353,6 +305,7 @@ internal class Hooks
                         {
                             ai.unableToFindComfortablePosition = 0;
                         }
+
                         if (ai.unableToFindComfortablePosition > 40)
                         {
                             ai.idleCounter = 0;
@@ -366,12 +319,14 @@ internal class Hooks
                                 bodyChunk.vel.y = bodyChunk.vel.y - 0.1f;
                             }
                         }
+
                         if (ai.idleRestlessness < 40 && UnityEngine.Random.value < 0.0016666667f)
                         {
                             ai.idleRestlessness = UnityEngine.Random.Range(1, 40);
                         }
                     }
                 }
+
                 if (ai.IdleSpotScore(ai.creature.abstractAI.destination) == 3.4028235E+38f)
                 {
                     ai.idleCounter = 0;
@@ -382,8 +337,8 @@ internal class Hooks
                     {
                         ai.forbiddenIdleSpot = ai.pathFinder.GetDestination;
                     }
-                    WorldCoordinate worldCoordinate = new WorldCoordinate(ai.creature.Room.index, UnityEngine.Random.Range(0, self.room.TileWidth), UnityEngine.Random.Range(0, self.room.TileHeight), -1);
-                    if (ai.IdleSpotScore(worldCoordinate) < ai.IdleSpotScore(ai.creature.abstractAI.destination))
+
+                    if (ai.IdleSpotScore(new WorldCoordinate(ai.creature.Room.index, UnityEngine.Random.Range(0, self.room.TileWidth), UnityEngine.Random.Range(0, self.room.TileHeight), -1)) < ai.IdleSpotScore(ai.creature.abstractAI.destination))
                     {
                         ai.idleSpotWinStreak = 0;
                     }
@@ -407,16 +362,15 @@ internal class Hooks
             }
             else if (ai.behavior == LizardAI.Behavior.EscapeRain)
             {
-                if (ai.denFinder.GetDenPosition() != null)
-                {
-                    InconAct(data);
-                }
+                InconAct(data);
+
                 ai.runSpeed = Mathf.Lerp(ai.runSpeed, 1f, 0.1f);
             }
             else if (ai.behavior == LizardAI.Behavior.Frustrated)
             {
                 ai.focusCreature = ai.preyTracker.MostAttractivePrey;
                 ai.runSpeed = Mathf.Lerp(ai.runSpeed, 1f, 0.5f);
+
                 if (UnityEngine.Random.value < 0.1f || (Custom.ManhattanDistance(ai.creature.pos.Tile, ai.creature.abstractAI.destination.Tile) < 10 && ai.creature.pos.room == ai.creature.abstractAI.destination.room))
                 {
                     WorldCoordinate worldCoordinate2 = new WorldCoordinate(ai.creature.Room.index, UnityEngine.Random.Range(0, self.room.TileWidth), UnityEngine.Random.Range(0, self.room.TileHeight), -1);
@@ -425,16 +379,18 @@ internal class Hooks
                         ai.idleRestlessness = UnityEngine.Random.Range(30, 100);
                     }
                 }
+
                 if (UnityEngine.Random.value < 0.0125f)
                 {
                     InconAct(data);
-                    self.EnterAnimation(global::Lizard.Animation.PreyReSpotted, false);
+                    self.EnterAnimation(Lizard.Animation.PreyReSpotted, false);
                 }
                 if (UnityEngine.Random.value < 0.0125f)
                 {
                     InconAct(data);
                     self.bodyWiggleCounter = Math.Max(self.bodyWiggleCounter, (int)(UnityEngine.Random.value * 100f));
                 }
+
                 if (ShadowOfOptions.liz_voice.Value && UnityEngine.Random.value < 0.0125f && !self.safariControlled && ai.creature.creatureTemplate.type != CreatureTemplate.Type.BlackLizard)
                 {
                     self.voice.MakeSound(LizardVoice.Emotion.Frustration);
@@ -455,28 +411,23 @@ internal class Hooks
                 {
                     self.ReleaseGrasp(0);
                 }
-                Tracker tracker = ai.tracker;
-                Creature friend = ai.friendTracker.friend;
-                ai.focusCreature = tracker.RepresentationForCreature((friend != null) ? friend.abstractCreature : null, false);
+
+                ai.focusCreature = ai.tracker.RepresentationForCreature((ai.friendTracker.friend != null) ? ai.friendTracker.friend.abstractCreature : null, false);
             }
+
             if (ai.behavior != LizardAI.Behavior.Idle && ai.creature.creatureTemplate.type == CreatureTemplate.Type.RedLizard)
             {
                 ai.runSpeed = Mathf.Pow(ai.runSpeed, 0.7f);
             }
             ai.runSpeed = Mathf.Max(ai.runSpeed, ai.stuckTracker.Utility());
-            if (self.Template.type == CreatureTemplate.Type.BlackLizard || self.Template.type == Watcher.WatcherEnums.CreatureTemplateType.IndigoLizard)
-            {
-                ai.noiseTracker.hearingSkill = 2f;
-            }
-            else
-            {
-                ai.noiseTracker.hearingSkill = Custom.LerpMap(ai.runSpeed, 0f, 0.6f, 1.3f, 0.6f);
-            }
+
+            ai.noiseTracker.hearingSkill = (self.Template.type == CreatureTemplate.Type.BlackLizard || self.Template.type == Watcher.WatcherEnums.CreatureTemplateType.IndigoLizard) ? 2f : Custom.LerpMap(ai.runSpeed, 0f, 0.6f, 1.3f, 0.6f);
 
             if (self.rotModule != null)
             {
                 ai.noiseTracker.hearingSkill = ((self.rotModule.RotEyesClose < 1) ? 2f : 1f);
             }
+
             if (ShadowOfOptions.liz_attack.Value && ai.casualAggressionTarget != null && !self.safariControlled && UnityEngine.Random.value < 0.25f && ai.casualAggressionTarget.VisualContact && Custom.DistLess(ai.casualAggressionTarget.representedCreature.realizedCreature.mainBodyChunk.pos, self.mainBodyChunk.pos, self.lizardParams.attemptBiteRadius))
             {
                 InconAct(data);
@@ -514,8 +465,126 @@ internal class Hooks
 
             MiscHooks.AIUpdate(ai);
         }
+        #endregion
+    }
+    static void LizardViolence(On.Lizard.orig_Violence orig, Lizard self, BodyChunk source, Vector2? directionAndMomentum, BodyChunk hitChunk, PhysicalObject.Appendage.Pos onAppendagePos, Creature.DamageType type, float damage, float stunBonus)
+    {
+        if (!inconstorage.TryGetValue(self.abstractCreature, out InconData data) || type == null || !data.isAlive)
+        {
+            orig(self, source, directionAndMomentum, hitChunk, onAppendagePos, type, damage, stunBonus);
+
+            return;
+        }
+
+        try
+        {
+            bool sourceOwnerFlag = source != null && source.owner != null;
+
+            bool sourceValidTypeFlag = source == null || source != null && (source.owner == null || (source.owner != null && source.owner is not Leech && source.owner is not SporePlant.AttachedBee));
+
+            if (data.inconCycle != CycleNum(self.abstractCreature))
+                PreViolenceCheck(self, data);
+
+            orig(self, source, directionAndMomentum, hitChunk, onAppendagePos, type, damage, stunBonus);
+
+            #region lastDamageType
+            data.lastDamageType = type.ToString();
+
+            if (type == Creature.DamageType.Bite || type == Creature.DamageType.Stab)
+            {
+                data.lastDamageType = "Stab";
+            }
+
+            if (sourceOwnerFlag && source.owner is DartMaggot)
+            {
+                data.lastDamageType = "Uncon";
+            }
+            #endregion
+
+            if (data.returnToDen && sourceOwnerFlag && source.owner is Player)
+            {
+                data.returnToDen = false;
+            }
+
+            if (self.LizardState.health <= ShadowOfOptions.insta_die_threshold.Value || self.LizardState.health <= data.dieHealthThreshold && type != Creature.DamageType.Blunt)
+            {
+                data.isAlive = false;
+                if (ShadowOfOptions.debug_logs.Value)
+                    Debug.Log(all + self + " reached the insta die threshold and died");
+                return;
+            }
+
+            if (data.inconCycle != CycleNum(self.abstractCreature))
+            {
+                PostViolenceCheck(self, data, type.ToString(), sourceOwnerFlag && source.owner is Creature crit ? crit : null);
+                return;
+            }
+
+            if (IsInconBase(self) && sourceValidTypeFlag && hitChunk != null && (sourceOwnerFlag && source.owner is DartMaggot && !LizHitHeadShield(directionAndMomentum.Value) || hitChunk.index == 0 && UnityEngine.Random.Range(0, 100) < MiscHooks.UnconChance(self, data) || type == Creature.DamageType.Blunt && self.LizardState.health <= (data.healthThreshold + data.dieHealthThreshold) / 2))
+            {
+                data.isUncon = true;
+                if (ShadowOfOptions.debug_logs.Value)
+                    Debug.Log(all + self + " was knocked Uncontious");
+            }
+        }
+        catch (Exception e) { Incapacitation.Logger.LogError(e); }
+
+        #region Local
+        bool LizHitHeadShield(Vector2 direction)
+        {
+            float num19 = Vector2.Angle(direction, -self.bodyChunks[0].Rotation);
+            if (LizHitInMouth(direction))
+            {
+                return false;
+            }
+            if (num19 < self.lizardParams.headShieldAngle + 20f * self.JawOpen)
+            {
+                return true;
+            }
+            return false;
+        }
+        bool LizHitInMouth(Vector2 direction)
+        {
+            if (direction.y > 0f)
+            {
+                return false;
+            }
+            direction = Vector3.Slerp(direction, new Vector2(0f, 1f), 0.1f);
+            return Mathf.Abs(Vector2.Angle(direction, -self.bodyChunks[0].Rotation)) < Mathf.Lerp(-15f, 11f, self.JawOpen);
+        }
+        #endregion
+    }
+    #endregion
+
+    #region LizardAI
+    static void LizardAIUpdate(On.LizardAI.orig_Update orig, LizardAI self)
+    {
+        orig(self);
+
+        if (self == null || self.lizard == null || self.lizard.abstractCreature == null || self.creature == null || self.creature.abstractAI == null || self.creature.abstractAI.destination == null || !inconstorage.TryGetValue(self.lizard.abstractCreature, out InconData data) || !data.returnToDen || self.denFinder == null || self.denFinder.denPosition == null)
+        {
+            return;
+        }
+
+        self.creature.abstractAI.SetDestination(self.denFinder.denPosition.Value);
+    }
+    static bool LizardAIWantToStayInDenUntilEndOfCycle(On.LizardAI.orig_WantToStayInDenUntilEndOfCycle orig, LizardAI self)
+    {
+        if (!inconstorage.TryGetValue(self.lizard.abstractCreature, out InconData data) || !data.returnToDen)
+        {
+            return orig(self);
+        }
+
+        return true;
     }
 
+    static float LizardInjuryTrackerUtility(On.LizardAI.LizardInjuryTracker.orig_Utility orig, LizardAI.LizardInjuryTracker self)
+    {
+        return IsIncon(self.AI.creature.realizedCreature) ? 0 : orig(self);
+    }
+    #endregion
+
+    #region LizardGraphics
     static void LizardGraphicsUpdate(On.LizardGraphics.orig_Update orig, LizardGraphics self)
     {
         orig(self);
@@ -546,126 +615,37 @@ internal class Hooks
             }
         }
     }
+    #endregion
 
-    static void LizardViolence(On.Lizard.orig_Violence orig, Lizard self, BodyChunk source, Vector2? directionAndMomentum, BodyChunk hitChunk, PhysicalObject.Appendage.Pos onAppendagePos, Creature.DamageType type, float damage, float stunBonus)
+    #region LizardManual
+    public static float LizardLimbHealth(Func<LizardLimb, float> orig, LizardLimb self)
     {
-        if (!inconstorage.TryGetValue(self.abstractCreature, out InconData data) || type == null || !data.isAlive)
-        {
-            orig(self, source, directionAndMomentum, hitChunk, onAppendagePos, type, damage, stunBonus);
-
-            return;
-        }
-
         try
         {
-            bool sourceOwnerFlag = source != null && source.owner != null;
-
-            if (data.inconCycle != CycleNum(self.abstractCreature))
-                PreViolenceCheck(self, data);
-
-            orig(self, source, directionAndMomentum, hitChunk, onAppendagePos, type, damage, stunBonus);
-
-            #region lastDamageType
-            data.lastDamageType = type.ToString();
-
-            if (type == Creature.DamageType.Bite || type == Creature.DamageType.Stab)
+            if (IsIncon(((LizardGraphics)self.owner).lizard) && inconstorage.TryGetValue(((LizardGraphics)self.owner).lizard.abstractCreature, out InconData data) && data.stunTimer > 0 && (!shadowOfLizardsCheck || !ShadowOfLizardsLegDead()))
             {
-                data.lastDamageType = "Stab";
-            }
-
-            if (sourceOwnerFlag && source.owner is DartMaggot)
-            {
-                data.lastDamageType = "Uncon";
-            }
-            #endregion
-
-            if (data.returnToDen && sourceOwnerFlag && source.owner is Player)
-            {
-                data.returnToDen = false;
-            }
-
-            if (self.LizardState.health <= ShadowOfOptions.insta_die_threshold.Value || self.LizardState.health <= data.dieHealthThreshold && type != Creature.DamageType.Blunt)
-            {
-                data.isAlive = false;
-
-                if (ShadowOfOptions.debug_logs.Value)
-                    Debug.Log(all + self + " reached the insta die threshold and died");
-
-                return;
-            }
-
-            if (data.inconCycle != CycleNum(self.abstractCreature))
-            {
-                PostViolenceCheck(self, data, type.ToString(), sourceOwnerFlag && source.owner is Creature crit ? crit : null);
-                return;
-            }
-
-            if (IsInconBase(self) && hitChunk != null && (sourceOwnerFlag && source.owner is DartMaggot && !LizHitHeadShield(directionAndMomentum.Value) || hitChunk.index == 0 && UnityEngine.Random.Range(0, 100) < UnconChance() || type == Creature.DamageType.Blunt && self.LizardState.health <= (data.healthThreshold + data.dieHealthThreshold) / 2))
-            {
-                data.isUncon = true;
-                if (ShadowOfOptions.debug_logs.Value)
-                    Debug.Log(all + self + " was knocked Uncontious");
+                return 1f;
             }
         }
         catch (Exception e) { Incapacitation.Logger.LogError(e); }
+        return orig(self);
 
-        int UnconChance()
+        bool ShadowOfLizardsLegDead()
         {
-            int chance;
-
-            switch (data.lastDamageType)
-            {
-                case "Blunt":
-                    chance = ShadowOfOptions.uncon_chance_blunt.Value;
-                    if (ShadowOfOptions.debug_logs.Value)
-                        Debug.Log(all + self + " Blunt chance to uncon");
-                    break;
-                case "Stab":
-                    chance = ShadowOfOptions.uncon_chance_stab.Value;
-                    if (ShadowOfOptions.debug_logs.Value)
-                        Debug.Log(all + self + " Stab chance to uncon");
-                    break;
-                case "Explosion":
-                    chance = ShadowOfOptions.uncon_chance_explosion.Value;
-                    if (ShadowOfOptions.debug_logs.Value)
-                        Debug.Log(all + self + " Explosion chance to uncon");
-                    break;
-                case "Electric":
-                    chance = ShadowOfOptions.uncon_chance_electric.Value;
-                    if (ShadowOfOptions.debug_logs.Value)
-                        Debug.Log(all + self + " Electric chance to uncon");
-                    break;
-                default:
-                    chance = 0;
-                    if (ShadowOfOptions.debug_logs.Value)
-                        Debug.Log(all + self + " Null chance to uncon");
-                    break;
-            }
-
-            return chance;
-        }
-
-        bool LizHitHeadShield(Vector2 direction)
-        {
-            float num19 = Vector2.Angle(direction, -self.bodyChunks[0].Rotation);
-            if (LizHitInMouth(direction))
-            {
-                return false;
-            }
-            if (num19 < self.lizardParams.headShieldAngle + 20f * self.JawOpen)
-            {
-                return true;
-            }
-            return false;
-        }
-        bool LizHitInMouth(Vector2 direction)
-        {
-            if (direction.y > 0f)
-            {
-                return false;
-            }
-            direction = Vector3.Slerp(direction, new Vector2(0f, 1f), 0.1f);
-            return Mathf.Abs(Vector2.Angle(direction, -self.bodyChunks[0].Rotation)) < Mathf.Lerp(-15f, 11f, self.JawOpen);
+            return ShadowOfLizards.ShadowOfLizards.lizardstorage.TryGetValue(((LizardGraphics)self.owner).lizard.abstractCreature, out ShadowOfLizards.ShadowOfLizards.LizardData data) && data.armState[self.limbNumber] != "Normal";
         }
     }
+    public static bool LizardIsWallClimber(Func<Lizard, bool> orig, Lizard self)
+    {
+        try
+        {
+            if (IsIncon(self) && inconstorage.TryGetValue(self.abstractCreature, out InconData data))
+            {
+                return ModManager.MMF && self.room != null && self.room.gravity <= Lizard.zeroGravityMovementThreshold;
+            }
+        }
+        catch (Exception e) { Incapacitation.Logger.LogError(e); }
+        return orig(self);
+    }
+    #endregion
 }

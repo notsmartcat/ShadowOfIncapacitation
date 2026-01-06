@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System;
+
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation.VultureHooks;
@@ -9,15 +10,14 @@ internal class ILHooks
 {
     public static void Apply()
     {
+        IL.Vulture.Collide += ILVultureCollide;
+        IL.Vulture.Update += ILVultureUpdate;
         IL.Vulture.UpdateNeck += ILVultureUpdateNeck;
 
-        IL.Vulture.Update += ILVultureUpdate;
-
         IL.VultureTentacle.Update += ILVultureTentacleUpdate;
-
-        IL.Vulture.Collide += ILVultureCollide;
     }
 
+    #region Vulture
     static void ILVultureCollide(ILContext il)
     {
         ILCursor val = new(il);
@@ -41,7 +41,6 @@ internal class ILHooks
             Incapacitation.Logger.LogInfo(all + "Could not find match ILVultureCollide!");
         }
     }
-
     static void ILVultureUpdate(ILContext il)
     {
         ILCursor val = new(il);
@@ -73,36 +72,6 @@ internal class ILHooks
         }
         #endregion
     }
-
-    static void ILVultureTentacleUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-
-        #region Limp
-        if (val.TryGotoNext(MoveType.After, new Func<Instruction, bool>[1]
-        {
-            x => x.MatchStfld<Tentacle>("limp")
-        }))
-        {
-            //val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(VultureTentacleUpdate);
-            val.Emit<Tentacle>(OpCodes.Stfld, "limp");
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILVultureTentacleUpdate!");
-        }
-        #endregion
-    }
-
-    public static bool VultureTentacleUpdate(VultureTentacle self)
-    {
-        return (!IsIncon(self.vulture) && !self.vulture.Consious) || self.stun > 0;
-    }
-
     static void ILVultureUpdateNeck(ILContext il)
     {
         ILCursor val = new(il);
@@ -165,4 +134,36 @@ internal class ILHooks
     {
         return !IsIncon(self) && !self.Consious;
     }
+    #endregion
+
+    #region VultureTentacle
+    static void ILVultureTentacleUpdate(ILContext il)
+    {
+        ILCursor val = new(il);
+
+        #region Limp
+        if (val.TryGotoNext(MoveType.After, new Func<Instruction, bool>[1]
+        {
+            x => x.MatchStfld<Tentacle>("limp")
+        }))
+        {
+            //val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(VultureTentacleUpdate);
+            val.Emit<Tentacle>(OpCodes.Stfld, "limp");
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILVultureTentacleUpdate!");
+        }
+        #endregion
+    }
+
+    public static bool VultureTentacleUpdate(VultureTentacle self)
+    {
+        return (!IsIncon(self.vulture) && !self.vulture.Consious) || self.stun > 0;
+    }
+    #endregion
 }

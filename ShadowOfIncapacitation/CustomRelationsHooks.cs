@@ -1,10 +1,6 @@
-using IL.MoreSlugcats;
-using IL.Watcher;
-using UnityEngine;
 using static CreatureTemplate;
 using static RelationshipTracker;
 using static Incapacitation.Incapacitation;
-using static ShadowOfLizards.ShadowOfLizards;
 
 namespace Incapacitation;
 internal class CustomRelationsHooks
@@ -12,8 +8,6 @@ internal class CustomRelationsHooks
     public static void Apply()
     {
         On.LizardAI.IUseARelationshipTracker_UpdateDynamicRelationship += LizardAIUpdateDynamicRelationship;
-
-        //On.BigSpiderAI.IUseARelationshipTracker_UpdateDynamicRelationship += BigSpiderAIUpdateDynamicRelationship;
 
         On.MoreSlugcats.SlugNPCAI.IUseARelationshipTracker_UpdateDynamicRelationship += SlugNPCAIIUseARelationshipTracker_UpdateDynamicRelationship; ;
     }
@@ -27,11 +21,6 @@ internal class CustomRelationsHooks
             return new Relationship(Relationship.Type.Ignores, 0f);
         }
 
-        return orig(self, dRelation);
-    }
-
-    static Relationship BigSpiderAIUpdateDynamicRelationship(On.BigSpiderAI.orig_IUseARelationshipTracker_UpdateDynamicRelationship orig, BigSpiderAI self, DynamicRelationship dRelation)
-    {
         return orig(self, dRelation);
     }
 
@@ -64,39 +53,5 @@ internal class CustomRelationsHooks
         }
 
         return orig(self, dRelation);
-    }
-
-    private static bool IsThisBigCreatureForShelter(AbstractCreature creature)
-    {
-        Type type = creature.creatureTemplate.type;
-        return type == Type.Deer || type == Type.BrotherLongLegs || type == Type.DaddyLongLegs || type == Type.RedCentipede || type == Type.MirosBird || type == Type.PoleMimic || type == Type.TentaclePlant || creature.creatureTemplate.IsVulture || (ModManager.DLCShared && MSCIsThisBigCreatureForShelter()) || (ModManager.Watcher && WatcherIsThisBigCreatureForShelter());
-
-        bool MSCIsThisBigCreatureForShelter()
-        {
-            if (type == DLCSharedEnums.CreatureTemplateType.TerrorLongLegs)
-            {
-                return true;
-            }
-            if (type == DLCSharedEnums.CreatureTemplateType.MirosVulture)
-            {
-                return true;
-            }
-
-            return false;
-        }
-        bool WatcherIsThisBigCreatureForShelter()
-        {
-            return false;
-        }
-    }
-
-    static bool SpiderTemplateCheck(Creature crit)
-    {
-        return crit != null && (crit is Spider || crit is BigSpider);
-    }
-
-    static bool CentipedeTemplateCheck(Creature crit)
-    {
-        return crit != null && crit is Centipede;
     }
 }

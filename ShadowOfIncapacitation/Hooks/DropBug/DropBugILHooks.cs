@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System;
+
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation.DropBugHooks;
@@ -14,6 +15,90 @@ internal class ILHooks
         IL.DropBugGraphics.Update += ILDropBugGraphicsUpdate;
     }
 
+    #region DropBug
+    static void ILDropBugUpdate(ILContext il)
+    {
+        ILCursor val = new(il);
+        ILLabel target = null;
+
+        #region Die
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCallvirt<Creature>("Die")
+        }))
+        {
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(delegate (Creature creature)
+            {
+                ILHooksMisc.TryAddKillFeedEntry(creature, "Bleed");
+            });
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILDropBugUpdate Die!");
+        }
+        #endregion
+
+        #region Act
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<DropBug>("get_Footing"),
+            x => x.MatchBrfalse(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILDropBugUpdate Act target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILDropBugUpdate Act!");
+        }
+        #endregion
+
+        #region Footing
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<DropBug>("get_Footing"),
+            x => x.MatchBrfalse(out target)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(IsComa);
+            val.Emit(OpCodes.Brtrue, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILDropBugUpdate Footing!");
+        }
+        #endregion
+    }
+    #endregion
+
+    #region DropBugGraphics
     static void ILDropBugGraphicsUpdate(ILContext il)
     {
         ILCursor val = new(il);
@@ -223,85 +308,5 @@ internal class ILHooks
         }
         #endregion
     }
-
-    static void ILDropBugUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-        ILLabel target = null;
-
-        #region Die
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCallvirt<Creature>("Die")
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(delegate (Creature creature)
-            {
-                ILHooksMisc.TryAddKillFeedEntry(creature, "Bleed");
-            });
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILDropBugUpdate Die!");
-        }
-        #endregion
-
-        #region Act
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<DropBug>("get_Footing"),
-            x => x.MatchBrfalse(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILDropBugUpdate Act target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILDropBugUpdate Act!");
-        }
-        #endregion
-
-        #region Footing
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<DropBug>("get_Footing"),
-            x => x.MatchBrfalse(out target)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(IsComa);
-            val.Emit(OpCodes.Brtrue, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILDropBugUpdate Footing!");
-        }
-        #endregion
-    }
+    #endregion
 }

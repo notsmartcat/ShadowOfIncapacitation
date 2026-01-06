@@ -1,8 +1,5 @@
-﻿using MonoMod.RuntimeDetour;
-using RWCustom;
+﻿using RWCustom;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 using UnityEngine;
 
 using static Incapacitation.Incapacitation;
@@ -15,37 +12,11 @@ internal class Hooks
     {
         On.Cicada.Update += CicadaUpdate;
 
-        On.CicadaGraphics.Update += CicadaGraphicsUpdate;
-
         On.CicadaGraphics.DrawSprites += CicadaGraphicsDrawSprites;
+        On.CicadaGraphics.Update += CicadaGraphicsUpdate;
     }
 
-    static void CicadaGraphicsDrawSprites(On.CicadaGraphics.orig_DrawSprites orig, CicadaGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
-    {
-        orig(self, sLeaser, rCam, timeStacker, camPos);
-
-        if (!breathstorage.TryGetValue(self, out BreathData data) || self.culled)
-        {
-            return;
-        }
-
-        sLeaser.sprites[self.BodySprite].scaleY = self.iVars.fatness * (MiscHooks.ApplyBreath(data, timeStacker) / 2);
-
-        Vector2 rotation = Vector3.Slerp(self.lastZRotation, self.zRotation, timeStacker);
-        float num2 = Custom.AimFromOneVectorToAnother(new Vector2(0f, 0f), rotation);
-        sLeaser.sprites[self.BodySprite].scaleX = ((num2 > 0f) ? -1f : 1f) * (self.iVars.fatness * MiscHooks.ApplyBreath(data, timeStacker));
-    }
-
-    static void CicadaGraphicsUpdate(On.CicadaGraphics.orig_Update orig, CicadaGraphics self)
-    {
-        orig(self);
-
-        if (BreathCheck(self.cicada))
-        {
-            MiscHooks.UpdateBreath(self);
-        }
-    }
-
+    #region Cicada
     static void CicadaUpdate(On.Cicada.orig_Update orig, Cicada self, bool eu)
     {
         orig(self, eu);
@@ -55,98 +26,95 @@ internal class Hooks
             return;
         }
 
-        if (data.stunTimer > 0)
+        try
         {
-            self.flying = true;
-            data.stunTimer -= 1;
-        }
-        else
-        {
-            self.flying = false;
-        }
-
-        if (data.stunCountdown > 0)
-        {
-            data.stunCountdown -= 1;
-        }
-
-        if (self.Stunned)
-        {
-            return;
-        }
-
-        for (int i = 0; i < self.grabbedBy.Count; i++)
-        {
-            if (self.grabbedBy[i].grabber is Player player)
+            if (data.stunTimer > 0)
             {
-                self.AI.panicFleeCrit = player;
+                data.stunTimer -= 1;
+            }
+            self.flying = data.stunTimer > 0;
+            if (data.stunCountdown > 0)
+            {
+                data.stunCountdown -= 1;
+            }
+
+            if (self.Stunned)
+            {
                 return;
             }
-        }
-        if (self.Submersion > 0.5f)
-        {
-            self.Swim();
-            return;
-        }
 
-        AIUpdate();
-
-        if (self.flying)
-        {
-            self.flyingPower = Mathf.Lerp(self.flyingPower, 1f, 0.1f);
-        }
-        else
-        {
-            self.flyingPower = Mathf.Lerp(self.flyingPower, 0f, 0.05f);
-        }
-
-        if (self.AtSitDestination)
-        {
-            self.bodyChunks[1].vel += Vector2.ClampMagnitude(self.BodySitPosOffset(self.FindBodySitPos(self.AI.pathFinder.GetDestination.Tile)) - self.bodyChunks[1].pos, 10f) / 10f * 0.5f;
-            self.mainBodyChunk.vel += Vector2.ClampMagnitude(self.BodySitPosOffset(self.AI.pathFinder.GetDestination.Tile) - self.mainBodyChunk.pos, 10f) / 10f * 0.5f;
-        }
-
-        if (ShadowOfOptions.cic_attack.Value && self.chargeCounter > 0)
-        {
-            self.chargeCounter++;
-            if (self.chargeCounter < 21)
+            for (int i = 0; i < self.grabbedBy.Count; i++)
             {
-                self.bodyChunks[0].vel *= 0.8f;
-                self.bodyChunks[1].vel *= 0.8f;
-                self.bodyChunks[1].vel -= self.chargeDir * 0.8f;
+                if (self.grabbedBy[i].grabber is Player player)
+                {
+                    self.AI.panicFleeCrit = player;
+                    return;
+                }
             }
-            else if (self.chargeCounter == 21)
+
+            if (self.Submersion > 0.5f)
             {
-                self.room.PlaySound(SoundID.Cicada_Wings_Start_Bump_Attack, self.mainBodyChunk);
+                self.Swim();
+                return;
             }
-            else if (self.chargeCounter > 38)
+
+            AIUpdate();
+
+            if (self.flying)
             {
-                self.chargeCounter = 0;
-                self.bodyChunks[0].vel *= 0.5f;
-                self.bodyChunks[1].vel *= 0.5f;
-                self.room.PlaySound(SoundID.Cicada_Wings_Exit_Bump_Attack, self.mainBodyChunk);
+                self.flyingPower = Mathf.Lerp(self.flyingPower, 1f, 0.1f);
             }
             else
             {
-                self.bodyChunks[0].vel += self.chargeDir * 4f;
-                if (self.mainBodyChunk.vel.magnitude > 15f)
+                self.flyingPower = Mathf.Lerp(self.flyingPower, 0f, 0.05f);
+            }
+
+            if (self.AtSitDestination)
+            {
+                self.bodyChunks[1].vel += Vector2.ClampMagnitude(self.BodySitPosOffset(self.FindBodySitPos(self.AI.pathFinder.GetDestination.Tile)) - self.bodyChunks[1].pos, 10f) / 10f * 0.5f;
+                self.mainBodyChunk.vel += Vector2.ClampMagnitude(self.BodySitPosOffset(self.AI.pathFinder.GetDestination.Tile) - self.mainBodyChunk.pos, 10f) / 10f * 0.5f;
+            }
+
+            if (ShadowOfOptions.cic_attack.Value && self.chargeCounter > 0)
+            {
+                self.chargeCounter++;
+                if (self.chargeCounter < 21)
                 {
+                    self.bodyChunks[0].vel *= 0.8f;
                     self.bodyChunks[1].vel *= 0.8f;
+                    self.bodyChunks[1].vel -= self.chargeDir * 0.8f;
+                }
+                else if (self.chargeCounter == 21)
+                {
+                    self.room.PlaySound(SoundID.Cicada_Wings_Start_Bump_Attack, self.mainBodyChunk);
+                }
+                else if (self.chargeCounter > 38)
+                {
+                    self.chargeCounter = 0;
+                    self.bodyChunks[0].vel *= 0.5f;
+                    self.bodyChunks[1].vel *= 0.5f;
+                    self.room.PlaySound(SoundID.Cicada_Wings_Exit_Bump_Attack, self.mainBodyChunk);
                 }
                 else
                 {
-                    self.bodyChunks[1].vel *= 0.98f;
-                }
-            }
-            if (self.room.aimap.getAItile(self.mainBodyChunk.pos).narrowSpace)
-            {
-                self.chargeCounter = 0;
-            }
-            InconAct();
-            self.flying = true;
-            return;
-        }
+                    self.bodyChunks[0].vel += self.chargeDir * 4f;
 
+                    self.bodyChunks[1].vel *= self.mainBodyChunk.vel.magnitude > 15f ? 0.8f : 0.98f;
+                }
+
+                if (self.room.aimap.getAItile(self.mainBodyChunk.pos).narrowSpace)
+                {
+                    self.chargeCounter = 0;
+                }
+
+                InconAct();
+                self.flying = true;
+                return;
+            }
+        }
+        catch (Exception e) { Incapacitation.Logger.LogError(e); }
+
+        #region Local
         void AIUpdate()
         {
             CicadaAI ai = self.AI;
@@ -159,22 +127,20 @@ internal class Hooks
             {
                 ai.tracker.SeeCreature(ai.cicada.LickedByPlayer.abstractCreature);
             }
+
             if (ai.panicFleeCrit != null)
             {
                 if (!Custom.DistLess(ai.cicada.mainBodyChunk.pos, ai.panicFleeCrit.mainBodyChunk.pos, 300f) || ai.cicada.mainBodyChunk.ContactPoint.x != 0 || ai.cicada.mainBodyChunk.ContactPoint.y != 0)
                 {
-                    Debug.Log(self + " run away from " + ai.panicFleeCrit);
                     InconAct();
                     ai.panicFleeCrit = null;
                 }
                 return;
             }
+
             AIModule aimodule = ai.utilityComparer.HighestUtilityModule();
             ai.currentUtility = ai.utilityComparer.HighestUtility();
-            if (aimodule != null && ai.cicada.safariControlled)
-            {
-                ai.currentUtility = 0f;
-            }
+
             if (aimodule != null)
             {
                 if (aimodule is ThreatTracker)
@@ -226,7 +192,9 @@ internal class Hooks
                     ai.cicada.LoseAllGrasps();
                 }
             }
+
             ai.stuckTracker.satisfiedWithThisPosition = !ai.cicada.AtSitDestination;
+
             if (ai.behavior == CicadaAI.Behavior.Idle)
             {
                 if (ai.circleGroup != null)
@@ -246,6 +214,7 @@ internal class Hooks
                         ai.idleSitCounter = UnityEngine.Random.Range(0, UnityEngine.Random.Range(0, 650));
                         ai.forbiddenIdleSitSpot = ai.idleSitSpot;
                     }
+
                     if (ai.idleSitSpot == ai.forbiddenIdleSitSpot)
                     {
                         IntVector2 intVector = new IntVector2(UnityEngine.Random.Range(0, ai.cicada.room.TileWidth), UnityEngine.Random.Range(0, ai.cicada.room.TileHeight));
@@ -267,13 +236,10 @@ internal class Hooks
                     InconAct();
                     return;
                 }
-                if (ai.behavior == CicadaAI.Behavior.EscapeRain)
+                else if (ai.behavior == CicadaAI.Behavior.EscapeRain)
                 {
-                    if (ai.denFinder.GetDenPosition() != null)
-                    {
-                        InconAct();
-                        return;
-                    }
+                    InconAct();
+                    return;
                 }
                 else if (ShadowOfOptions.cic_eat.Value && ai.behavior == CicadaAI.Behavior.Hunt)
                 {
@@ -298,6 +264,7 @@ internal class Hooks
                             }
                         }
                     }
+
                     ai.tiredOfHuntingCounter++;
                     if (ai.tiredOfHuntingCounter > 200)
                     {
@@ -328,5 +295,38 @@ internal class Hooks
 
             data.stunCountdown = data.stunTimer + UnityEngine.Random.Range(10, 21);
         }
+        #endregion
     }
+    #endregion
+
+    #region CicadaGraphics
+    static void CicadaGraphicsDrawSprites(On.CicadaGraphics.orig_DrawSprites orig, CicadaGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+    {
+        orig(self, sLeaser, rCam, timeStacker, camPos);
+
+        if (!breathstorage.TryGetValue(self, out BreathData data) || self.culled)
+        {
+            return;
+        }
+
+        try
+        {
+            sLeaser.sprites[self.BodySprite].scaleY = self.iVars.fatness * (MiscHooks.ApplyBreath(data, timeStacker) / 2);
+
+            Vector2 rotation = Vector3.Slerp(self.lastZRotation, self.zRotation, timeStacker);
+            float num2 = Custom.AimFromOneVectorToAnother(new Vector2(0f, 0f), rotation);
+            sLeaser.sprites[self.BodySprite].scaleX = ((num2 > 0f) ? -1f : 1f) * (self.iVars.fatness * MiscHooks.ApplyBreath(data, timeStacker));
+        }
+        catch (Exception e) { Incapacitation.Logger.LogError(e); }
+    }
+    static void CicadaGraphicsUpdate(On.CicadaGraphics.orig_Update orig, CicadaGraphics self)
+    {
+        orig(self);
+
+        if (BreathCheck(self.cicada))
+        {
+            MiscHooks.UpdateBreath(self);
+        }
+    }
+    #endregion
 }

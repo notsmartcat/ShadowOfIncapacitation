@@ -151,7 +151,6 @@ public class Incapacitation : BaseUnityPlugin
             if (!init)
             {
                 init = true;
-                //Futile.atlasManager.LoadAtlas("atlases/ShadowOfAtlas");
             }
             optionsMenuInstance = new ShadowOfOptions(this);
             MachineConnector.SetRegisteredOI("notsmartcat.incapacitation", optionsMenuInstance);
@@ -186,18 +185,6 @@ public class Incapacitation : BaseUnityPlugin
                     creature.realizedCreature.Die();
 
                     InconAct(data);
-                }
-            }
-
-            if (false && Input.GetKey("m"))
-            {
-                List<AbstractCreature> list = new(self.abstractCreature.Room.creatures);
-                foreach (AbstractCreature creature in list)
-                {
-                    if (creature.realizedCreature == null || creature.realizedCreature is Player || !inconstorage.TryGetValue(creature, out _))
-                    {
-                        continue;
-                    }
                 }
             }
         }
@@ -263,8 +250,6 @@ public class Incapacitation : BaseUnityPlugin
         data.wasDead = true;
 
         int chance = UnityEngine.Random.Range(0, 100);
-
-        //Debug.Log(killType);
 
         int unconChance;
         int inconChance;
@@ -366,7 +351,7 @@ public class Incapacitation : BaseUnityPlugin
     public static bool IsAbstractCreatureValid(AbstractCreature self)
     {
         if (self != null && (
-            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Fly ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Fly && ShadowOfOptions.bat_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigSpider && ShadowOfOptions.spid_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Centipede && ShadowOfOptions.centi_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.CicadaA && ShadowOfOptions.cic_state.Value != "Disabled" ||

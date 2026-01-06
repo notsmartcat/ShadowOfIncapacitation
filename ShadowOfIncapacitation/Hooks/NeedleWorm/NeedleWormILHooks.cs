@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System;
+
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation.NeedleWormHooks;
@@ -12,6 +13,7 @@ internal class ILHooks
         IL.SmallNeedleWorm.BitByPlayer += ILSmallNeedleWormBitByPlayer;
     }
 
+    #region SmallNeedleWorm
     static void ILSmallNeedleWormBitByPlayer(ILContext il)
     {
         ILCursor val = new(il);
@@ -47,4 +49,5 @@ internal class ILHooks
             Incapacitation.Logger.LogInfo(all + "Could not find match ILSmallNeedleWormBitByPlayer ActuallyKill!");
         }
     }
+    #endregion
 }

@@ -1,7 +1,6 @@
 ﻿using MonoMod.RuntimeDetour;
 using RWCustom;
 using System;
-using System.Drawing;
 using UnityEngine;
 
 using static Incapacitation.Incapacitation;
@@ -13,91 +12,58 @@ internal class Hooks
     public static void Apply()
     {
         On.EggBug.ctor += NewEggBug;
-
         On.EggBug.Update += EggBugUpdate;
 
         On.EggBugAI.CreatureSpotted += EggBugAICreatureSpotted;
 
-        On.EggBugGraphics.Update += EggBugGraphicsUpdate;
         On.EggBugGraphics.DrawSprites += EggBugGraphicsDrawSprites;
+        On.EggBugGraphics.Update += EggBugGraphicsUpdate;
 
         new Hook(
             typeof(EggBugGraphics).GetProperty(nameof(EggBugGraphics.ShowEggs)).GetGetMethod(), ShadowOfEggBugGraphicsShowEggs);
     }
 
-    static void EggBugGraphicsDrawSprites(On.EggBugGraphics.orig_DrawSprites orig, EggBugGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+    #region EggBug
+    static void NewEggBug(On.EggBug.orig_ctor orig, EggBug self, AbstractCreature abstractCreature, World world)
     {
-        orig(self, sLeaser, rCam, timeStacker, camPos);
+        orig(self, abstractCreature, world);
 
-        if (!breathstorage.TryGetValue(self, out BreathData data) || self.culled)
+        if (!inconstorage.TryGetValue(self.abstractCreature, out InconData data) || !data.isAlive || !data.returnToDen && !IsComa(self))
         {
             return;
         }
 
-        sLeaser.sprites[self.HeadSprite].scaleX = (self.bug.FireBug ? 0.85f : 0.45f) * MiscHooks.ApplyBreath(data, timeStacker);
-        sLeaser.sprites[self.HeadSprite].scaleY = (self.bug.FireBug ? 0.95f : 0.55f) * MiscHooks.ApplyBreath(data, timeStacker);
-    }
-
-    static void EggBugGraphicsUpdate(On.EggBugGraphics.orig_Update orig, EggBugGraphics self)
-    {
-        orig(self);
-
-        if (BreathCheck(self.bug))
+        try
         {
-            MiscHooks.UpdateBreath(self);
-        }
-    }
-
-    static void EggBugAICreatureSpotted(On.EggBugAI.orig_CreatureSpotted orig, EggBugAI self, bool firstSpot, Tracker.CreatureRepresentation otherCreature)
-    {
-        if (!inconstorage.TryGetValue(self.bug.abstractCreature, out InconData data) || !IsComa(self.bug))
-        {
-            orig(self, firstSpot, otherCreature);
-            return;
-        }
-
-        if (!firstSpot && UnityEngine.Random.value > self.fear)
-        {
-            return;
-        }
-        CreatureTemplate.Relationship relationship = self.DynamicRelationship(otherCreature);
-        if (relationship.type == CreatureTemplate.Relationship.Type.Ignores)
-        {
-            return;
-        }
-        if (!self.bug.safariControlled && firstSpot && relationship.type == CreatureTemplate.Relationship.Type.Afraid && relationship.intensity > 0.06f && Custom.DistLess(self.bug.DangerPos, self.bug.room.MiddleOfTile(otherCreature.BestGuessForPosition()), Custom.LerpMap(relationship.intensity, 0.06f, 0.5f, 50f, 300f)))
-        {
-            TryJump(self.bug, self.bug.room.MiddleOfTile(otherCreature.BestGuessForPosition()));
-        }
-        if (relationship.intensity > (firstSpot ? 0.02f : 0.1f))
-        {
-            Suprise(self.bug.room.MiddleOfTile(otherCreature.BestGuessForPosition()));
-        }
-
-        void Suprise(Vector2 surprisePos)
-        {
-            if (!IsIncon(self.bug))
+            if (data.returnToDen)
             {
-                return;
-            }
-
-            if (Custom.DistLess(surprisePos, self.bug.mainBodyChunk.pos, 300f))
-            {
-                for (int i = 0; i < self.bug.bodyChunks.Length; i++)
+                if (self.FireBug)
                 {
-                    if (self.bug.room.aimap.TileAccessibleToCreature(self.bug.bodyChunks[i].pos, self.bug.Template))
-                    {
-                        self.bug.bodyChunks[i].vel += (Custom.RNV() * 4f + Custom.DirVec(surprisePos, self.bug.bodyChunks[i].pos) * 2f) * (0.5f + 0.5f * self.fear);
-                    }
+                    self.dropEggs = ShadowOfOptions.fire_den.Value;
+
+                    self.dropSpears = ShadowOfOptions.fire_den.Value || ShadowOfOptions.fire_spear.Value;
+                }
+                else
+                {
+                    self.dropEggs = ShadowOfOptions.egg_egg.Value || ShadowOfOptions.egg_den.Value;
                 }
             }
+            else
+            {
+                if (self.FireBug)
+                {
+                    self.dropEggs = false;
 
-            self.bug.shake = Math.Max(self.bug.shake, UnityEngine.Random.Range(5, 15));
-            self.fear = Custom.LerpAndTick(self.fear, 1f, 0.3f, 0.142857149f);
-            self.bug.Squirt(self.fear);
+                    self.dropSpears = ShadowOfOptions.fire_spear.Value;
+                }
+                else
+                {
+                    self.dropEggs = ShadowOfOptions.egg_egg.Value;
+                }
+            }
         }
+        catch (Exception e) { Incapacitation.Logger.LogError(e); }
     }
-
     static void EggBugUpdate(On.EggBug.orig_Update orig, EggBug self, bool eu)
     {
         orig(self, eu);
@@ -107,150 +73,141 @@ internal class Hooks
             return;
         }
 
-        if (data.stunTimer > 0)
+        try
         {
-            data.stunTimer -= 1;
-        }
-        if (data.stunCountdown > 0)
-        {
-            data.stunCountdown -= 1;
-        }
-
-        if (self.grabbedBy.Count > 0)
-        {
-            if (IsIncon(self))
+            if (data.stunTimer > 0)
             {
-                for (int m = 0; m < self.bodyChunks.Length; m++)
+                data.stunTimer -= 1;
+            }
+            if (data.stunCountdown > 0)
+            {
+                data.stunCountdown -= 1;
+            }
+
+            if (self.grabbedBy.Count > 0)
+            {
+                if (IsIncon(self))
                 {
-                    self.bodyChunks[m].vel += Custom.RNV() * 2f;
+                    for (int m = 0; m < self.bodyChunks.Length; m++)
+                    {
+                        self.bodyChunks[m].vel += Custom.RNV() * 2f;
+                    }
+                    AIUpdate();
                 }
+                self.footingCounter = 0;
+                self.travelDir *= 0f;
+            }
+
+            if (self.Stunned || !IsIncon(self) || data.stunTimer > 0)
+            {
+                self.footingCounter = 0;
+                return;
+            }
+
+            self.footingCounter++;
+
+            if (self.Submersion > 0.3f)
+            {
+                Swim();
                 AIUpdate();
+                return;
             }
-            self.footingCounter = 0;
-            self.travelDir *= 0f;
-        }
 
-        if (self.Stunned || !IsIncon(self) || data.stunTimer > 0)
-        {
-            self.footingCounter = 0;
-            return;
-        }
-
-        self.footingCounter++;
-
-        if (self.Submersion > 0.3f)
-        {
-            Swim();
-            AIUpdate();
-            return;
-        }
-        if (self.specialMoveCounter > 0)
-        {
-            self.specialMoveCounter--;
-            //self.MoveTowards(self.room.MiddleOfTile(self.specialMoveDestination));
-            self.travelDir = Vector2.Lerp(self.travelDir, Custom.DirVec(self.mainBodyChunk.pos, self.room.MiddleOfTile(self.specialMoveDestination)), 0.4f);
-            if (Custom.DistLess(self.mainBodyChunk.pos, self.room.MiddleOfTile(self.specialMoveDestination), 5f))
+            if (self.specialMoveCounter > 0)
             {
-                self.specialMoveCounter = 0;
-            }
-        }
-        else
-        {
-            if (!self.room.aimap.TileAccessibleToCreature(self.mainBodyChunk.pos, self.Template) && !self.room.aimap.TileAccessibleToCreature(self.bodyChunks[1].pos, self.Template))
-            {
-                self.footingCounter = Custom.IntClamp(self.footingCounter - 3, 0, 35);
-            }
-            if (!self.safariControlled && ((self.FireBug && self.grasps[0] != null) || ((!self.FireBug || self.eggsLeft > 0) && (self.room.GetWorldCoordinate(self.mainBodyChunk.pos) == self.AI.pathFinder.GetDestination || self.room.GetWorldCoordinate(self.bodyChunks[1].pos) == self.AI.pathFinder.GetDestination) && self.AI.threatTracker.Utility() < 0.5f)))
-            {
-                self.sitting = true;
-                self.GoThroughFloors = false;
+                self.specialMoveCounter--;
+                self.travelDir = Vector2.Lerp(self.travelDir, Custom.DirVec(self.mainBodyChunk.pos, self.room.MiddleOfTile(self.specialMoveDestination)), 0.4f);
+                if (Custom.DistLess(self.mainBodyChunk.pos, self.room.MiddleOfTile(self.specialMoveDestination), 5f))
+                {
+                    self.specialMoveCounter = 0;
+                }
             }
             else
             {
-                MovementConnection movementConnection = (self.AI.pathFinder as StandardPather).FollowPath(self.room.GetWorldCoordinate(self.mainBodyChunk.pos), true);
-                if (movementConnection == default(MovementConnection))
+                if (!self.room.aimap.TileAccessibleToCreature(self.mainBodyChunk.pos, self.Template) && !self.room.aimap.TileAccessibleToCreature(self.bodyChunks[1].pos, self.Template))
                 {
-                    movementConnection = (self.AI.pathFinder as StandardPather).FollowPath(self.room.GetWorldCoordinate(self.bodyChunks[1].pos), true);
+                    self.footingCounter = Custom.IntClamp(self.footingCounter - 3, 0, 35);
                 }
-                if (movementConnection != default(MovementConnection))
+
+                if (!self.safariControlled && ((self.FireBug && self.grasps[0] != null) || ((!self.FireBug || self.eggsLeft > 0) && (self.room.GetWorldCoordinate(self.mainBodyChunk.pos) == self.AI.pathFinder.GetDestination || self.room.GetWorldCoordinate(self.bodyChunks[1].pos) == self.AI.pathFinder.GetDestination) && self.AI.threatTracker.Utility() < 0.5f)))
                 {
-                    self.travelDir = Vector2.Lerp(self.travelDir, Custom.DirVec(self.mainBodyChunk.pos, self.room.MiddleOfTile(movementConnection.destinationCoord)), 0.4f);
+                    self.sitting = true;
+                    self.GoThroughFloors = false;
                 }
                 else
                 {
-                    self.GoThroughFloors = false;
+                    MovementConnection movementConnection = (self.AI.pathFinder as StandardPather).FollowPath(self.room.GetWorldCoordinate(self.mainBodyChunk.pos), true);
+                    if (movementConnection == default)
+                    {
+                        movementConnection = (self.AI.pathFinder as StandardPather).FollowPath(self.room.GetWorldCoordinate(self.bodyChunks[1].pos), true);
+                    }
+                    if (movementConnection != default)
+                    {
+                        self.travelDir = Vector2.Lerp(self.travelDir, Custom.DirVec(self.mainBodyChunk.pos, self.room.MiddleOfTile(movementConnection.destinationCoord)), 0.4f);
+                    }
+                    else
+                    {
+                        self.GoThroughFloors = false;
+                    }
                 }
             }
-        }
-        if (self.FireBug && self.eggsLeft <= 0 && self.grasps[0] == null)
-        {
-            self.sitting = false;
-        }
-        AIUpdate();
-        float num = self.runCycle;
-        if (!Custom.DistLess(self.mainBodyChunk.pos, self.mainBodyChunk.lastPos, 5f))
-        {
-            self.runCycle += self.runSpeed / 10f;
-        }
-        if (num < Mathf.Floor(self.runCycle))
-        {
-            self.room.PlaySound(SoundID.Egg_Bug_Scurry, self.mainBodyChunk);
-        }
-        if (self.sitting)
-        {
-            Vector2 a = new Vector2(0f, 0f);
-            for (int i = 0; i < 8; i++)
-            {
-                if (self.room.GetTile(self.abstractCreature.pos.Tile + Custom.eightDirections[i]).Solid)
-                {
-                    a -= Custom.eightDirections[i].ToVector2();
-                }
-            }
-            self.awayFromTerrainDir = Vector2.Lerp(self.awayFromTerrainDir, a.normalized, 0.1f);
-            return;
-        }
-        self.awayFromTerrainDir *= 0.7f;
 
-        void Swim()
-        {
-            self.bodyChunks[0].vel *= 1f - 0.05f * self.bodyChunks[0].submersion;
-            self.bodyChunks[1].vel *= 1f - 0.1f * self.bodyChunks[1].submersion;
-            self.GoThroughFloors = true;
-            self.bodyChunks[0].vel *= 0.9f;
-            //self.mainBodyChunk.vel += Custom.DirVec(self.mainBodyChunk.pos, self.room.MiddleOfTile(movementConnection.destinationCoord)) * 1.4f;
-            if (!self.safariControlled || self.Submersion < 0.5f)
+            if (self.FireBug && self.eggsLeft <= 0 && self.grasps[0] == null)
             {
-                self.footingCounter = Math.Max(self.footingCounter, 25);
-                self.outOfWaterFooting = 20;
+                self.sitting = false;
+            }
+
+            AIUpdate();
+
+            float num = self.runCycle;
+            if (!Custom.DistLess(self.mainBodyChunk.pos, self.mainBodyChunk.lastPos, 5f))
+            {
+                self.runCycle += self.runSpeed / 10f;
+            }
+            if (num < Mathf.Floor(self.runCycle))
+            {
+                self.room.PlaySound(SoundID.Egg_Bug_Scurry, self.mainBodyChunk);
+            }
+
+            if (self.sitting)
+            {
+                Vector2 a = new Vector2(0f, 0f);
+                for (int i = 0; i < 8; i++)
+                {
+                    if (self.room.GetTile(self.abstractCreature.pos.Tile + Custom.eightDirections[i]).Solid)
+                    {
+                        a -= Custom.eightDirections[i].ToVector2();
+                    }
+                }
+                self.awayFromTerrainDir = Vector2.Lerp(self.awayFromTerrainDir, a.normalized, 0.1f);
                 return;
             }
-            self.mainBodyChunk.vel *= 0.75f;
-            self.footingCounter = 0;
-            self.outOfWaterFooting = 0;
-        }
 
+            self.awayFromTerrainDir *= 0.7f;
+        }
+        catch (Exception e) { Incapacitation.Logger.LogError(e); }
+
+        #region Local
         void AIUpdate()
         {
             EggBugAI ai = self.AI;
 
             MiscHooks.AIUpdate(ai);
+
             if (ai.bug.room == null)
             {
                 return;
             }
+
             if (ModManager.MSC && ai.bug.LickedByPlayer != null)
             {
                 ai.tracker.SeeCreature(ai.bug.LickedByPlayer.abstractCreature);
             }
+
             ai.pathFinder.walkPastPointOfNoReturn = (ai.stranded || ai.denFinder.GetDenPosition() == null || !ai.pathFinder.CoordinatePossibleToGetBackFrom(ai.denFinder.GetDenPosition().Value) || ai.threatTracker.Utility() > 0.95f);
-            if (ai.bug.sitting)
-            {
-                ai.noiseTracker.hearingSkill = 2f;
-            }
-            else
-            {
-                ai.noiseTracker.hearingSkill = 0.2f;
-            }
+
+            ai.noiseTracker.hearingSkill = ai.bug.sitting ? 2f : 0.2f;
+
             ai.utilityComparer.GetUtilityTracker(ai.threatTracker).weight = Custom.LerpMap(ai.threatTracker.ThreatOfTile(ai.creature.pos, true), 0.1f, 2f, 0.1f, 1f, 0.5f);
             AIModule aimodule = ai.utilityComparer.HighestUtilityModule();
             ai.currentUtility = ai.utilityComparer.HighestUtility();
@@ -278,6 +235,7 @@ internal class Hooks
             {
                 ai.behavior = EggBugAI.Behavior.Idle;
             }
+
             if (ai.behavior == EggBugAI.Behavior.Idle || ai.behavior == EggBugAI.Behavior.Hunt)
             {
                 ai.bug.runSpeed = Custom.LerpAndTick(ai.bug.runSpeed, 0.5f + 0.5f * Mathf.Max(ai.threatTracker.Utility(), ai.fear), 0.01f, 0.016666668f);
@@ -317,7 +275,6 @@ internal class Hooks
                     }
                     if (ai.IdleScore(ai.tempIdlePos) < ai.IdleScore(ai.pathFinder.GetDestination) + Custom.LerpMap((float)ai.idlePosCounter, 0f, 300f, 100f, -300f))
                     {
-                        //ai.SetDestination(ai.tempIdlePos);
                         ai.idlePosCounter = UnityEngine.Random.Range(200, 800);
                         ai.tempIdlePos = new WorldCoordinate(ai.bug.room.abstractRoom.index, UnityEngine.Random.Range(0, ai.bug.room.TileWidth), UnityEngine.Random.Range(0, ai.bug.room.TileHeight), -1);
                     }
@@ -347,14 +304,116 @@ internal class Hooks
 
                 ai.bug.runSpeed = Custom.LerpAndTick(ai.bug.runSpeed, 1f, 0.025f, 0.1f);
             }
+
             ai.fear = Custom.LerpAndTick(ai.fear, Mathf.Max(ai.utilityComparer.GetUtilityTracker(ai.threatTracker).SmoothedUtility(), Mathf.Pow(ai.threatTracker.Panic, 0.7f)), 0.07f, 0.033333335f);
+
             if (ai.noiseRectionDelay > 0)
             {
                 ai.noiseRectionDelay--;
             }
         }
-    }
 
+        void Swim()
+        {
+            self.bodyChunks[0].vel *= 1f - 0.05f * self.bodyChunks[0].submersion;
+            self.bodyChunks[1].vel *= 1f - 0.1f * self.bodyChunks[1].submersion;
+            self.GoThroughFloors = true;
+            self.bodyChunks[0].vel *= 0.9f;
+
+            if (!self.safariControlled || self.Submersion < 0.5f)
+            {
+                self.footingCounter = Math.Max(self.footingCounter, 25);
+                self.outOfWaterFooting = 20;
+                return;
+            }
+
+            self.mainBodyChunk.vel *= 0.75f;
+            self.footingCounter = 0;
+            self.outOfWaterFooting = 0;
+        }
+        #endregion
+    }
+    #endregion
+
+    #region EggBugAI
+    static void EggBugAICreatureSpotted(On.EggBugAI.orig_CreatureSpotted orig, EggBugAI self, bool firstSpot, Tracker.CreatureRepresentation otherCreature)
+    {
+        if (!IsComa(self.bug))
+        {
+            orig(self, firstSpot, otherCreature);
+            return;
+        }
+
+        if (!firstSpot && UnityEngine.Random.value > self.fear)
+        {
+            return;
+        }
+
+        CreatureTemplate.Relationship relationship = self.DynamicRelationship(otherCreature);
+        if (relationship.type == CreatureTemplate.Relationship.Type.Ignores)
+        {
+            return;
+        }
+
+        if (!self.bug.safariControlled && firstSpot && relationship.type == CreatureTemplate.Relationship.Type.Afraid && relationship.intensity > 0.06f && Custom.DistLess(self.bug.DangerPos, self.bug.room.MiddleOfTile(otherCreature.BestGuessForPosition()), Custom.LerpMap(relationship.intensity, 0.06f, 0.5f, 50f, 300f)))
+        {
+            TryJump(self.bug, self.bug.room.MiddleOfTile(otherCreature.BestGuessForPosition()));
+        }
+        if (relationship.intensity > (firstSpot ? 0.02f : 0.1f))
+        {
+            Suprise(self.bug.room.MiddleOfTile(otherCreature.BestGuessForPosition()));
+        }
+
+        void Suprise(Vector2 surprisePos)
+        {
+            if (!IsIncon(self.bug))
+            {
+                return;
+            }
+
+            if (Custom.DistLess(surprisePos, self.bug.mainBodyChunk.pos, 300f))
+            {
+                for (int i = 0; i < self.bug.bodyChunks.Length; i++)
+                {
+                    if (self.bug.room.aimap.TileAccessibleToCreature(self.bug.bodyChunks[i].pos, self.bug.Template))
+                    {
+                        self.bug.bodyChunks[i].vel += (Custom.RNV() * 4f + Custom.DirVec(surprisePos, self.bug.bodyChunks[i].pos) * 2f) * (0.5f + 0.5f * self.fear);
+                    }
+                }
+            }
+
+            self.bug.shake = Math.Max(self.bug.shake, UnityEngine.Random.Range(5, 15));
+            self.fear = Custom.LerpAndTick(self.fear, 1f, 0.3f, 0.142857149f);
+            self.bug.Squirt(self.fear);
+        }
+    }
+    #endregion
+
+    #region EggBugGraphics
+    static void EggBugGraphicsDrawSprites(On.EggBugGraphics.orig_DrawSprites orig, EggBugGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+    {
+        orig(self, sLeaser, rCam, timeStacker, camPos);
+
+        if (!breathstorage.TryGetValue(self, out BreathData data) || self.culled)
+        {
+            return;
+        }
+
+        sLeaser.sprites[self.HeadSprite].scaleX = (self.bug.FireBug ? 0.85f : 0.45f) * MiscHooks.ApplyBreath(data, timeStacker);
+        sLeaser.sprites[self.HeadSprite].scaleY = (self.bug.FireBug ? 0.95f : 0.55f) * MiscHooks.ApplyBreath(data, timeStacker);
+    }
+    static void EggBugGraphicsUpdate(On.EggBugGraphics.orig_Update orig, EggBugGraphics self)
+    {
+        orig(self);
+
+        if (BreathCheck(self.bug))
+        {
+            MiscHooks.UpdateBreath(self);
+        }
+    }
+    #endregion
+
+    #region EggBugOther
     public static void TryJump(EggBug self, Vector2 awayFromPoint)
     {
         self.Squirt(0.5f + 0.5f * self.AI.fear);
@@ -374,50 +433,16 @@ internal class Hooks
             Vector2 vector2 = Custom.PerpendicularVector(vector) * ((UnityEngine.Random.value < 0.5f) ? (-1f) : 1f);
             self.bodyChunks[0].vel += vector2 * 11f;
             self.bodyChunks[1].vel -= vector2 * 11f;
+
             if (!self.safariControlled)
             {
                 self.noJumps = 90;
             }
         }
     }
+    #endregion
 
-    static void NewEggBug(On.EggBug.orig_ctor orig, EggBug self, AbstractCreature abstractCreature, World world)
-    {
-        orig(self, abstractCreature, world);
-
-        if (!inconstorage.TryGetValue(self.abstractCreature, out InconData data) || !data.isAlive || !data.returnToDen && !IsComa(self))
-        {
-            return;
-        }
-
-        if (data.returnToDen)
-        {
-            if (self.FireBug)
-            {
-                self.dropEggs = ShadowOfOptions.fire_den.Value;
-
-                self.dropSpears = ShadowOfOptions.fire_den.Value || ShadowOfOptions.fire_spear.Value;
-            }
-            else
-            {
-                self.dropEggs = ShadowOfOptions.egg_egg.Value || ShadowOfOptions.egg_den.Value;
-            }
-        }
-        else
-        {
-            if (self.FireBug)
-            {
-                self.dropEggs = false;
-
-                self.dropSpears = ShadowOfOptions.fire_spear.Value;
-            }
-            else
-            {
-                self.dropEggs = ShadowOfOptions.egg_egg.Value;
-            }
-        }
-    }
-
+    #region EggBugManual
     public static bool ShadowOfEggBugGraphicsShowEggs(Func<EggBugGraphics, bool> orig, EggBugGraphics self)
     {
         try
@@ -430,4 +455,5 @@ internal class Hooks
         catch (Exception e) { Incapacitation.Logger.LogError(e); }
         return orig(self);
     }
+    #endregion
 }

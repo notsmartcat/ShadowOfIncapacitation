@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System;
+
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation.EggBugHooks;
@@ -9,255 +10,13 @@ internal class ILHooks
 {
     public static void Apply()
     {
-        IL.EggBug.Update += ILEggBugUpdate;
-
         IL.EggBug.Die += ILEggBugDie;
+        IL.EggBug.Update += ILEggBugUpdate;
 
         IL.EggBugGraphics.Update += ILEggBugGraphicsUpdate;
     }
 
-    static void ILEggBugGraphicsUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-        ILLabel target = null;
-
-        #region legsDangleCounter
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<EggBugGraphics>("bug"),
-            x => x.MatchCallvirt<EggBug>("get_Footing"),
-            x => x.MatchBrtrue(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate legsDangleCounter target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<EggBugGraphics>("bug"),
-            x => x.MatchCallvirt<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<EggBugGraphics>(OpCodes.Ldfld, "bug");
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate legsDangleCounter!");
-        }
-        #endregion
-
-        #region zRotat
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[7]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<EggBugGraphics>("bug"),
-            x => x.MatchLdfld<UpdatableAndDeletable>("room"),
-            x => x.MatchLdfld<Room>("aimap"),
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<EggBugGraphics>("bug"),
-            x => x.MatchCallvirt<Creature>("get_mainBodyChunk"),
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate zRotat target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<EggBugGraphics>("bug"),
-            x => x.MatchCallvirt<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<EggBugGraphics>(OpCodes.Ldfld, "bug");
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate zRotat!");
-        }
-        #endregion
-
-        #region aNormalize
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdloc(11),
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<EggBugGraphics>("bug"),
-            x => x.MatchLdfld<EggBug>("travelDir")
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate aNormalize target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<EggBugGraphics>("bug"),
-            x => x.MatchCallvirt<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<EggBugGraphics>(OpCodes.Ldfld, "bug");
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate aNormalize!");
-        }
-        #endregion
-
-        #region LegsVel
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[1]
-        {
-            x => x.MatchLdfld<EggBugGraphics>("legsDangleCounter"),
-        })){}
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate LegsVel skip!");
-        }
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<EggBugGraphics>("bug"),
-            x => x.MatchCallvirt<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _)
-        })){}
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate LegsVel skip2!");
-        }
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<EggBugGraphics>("legs"),
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate LegsVel target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<EggBugGraphics>("bug"),
-            x => x.MatchCallvirt<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<EggBugGraphics>(OpCodes.Ldfld, "bug");
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate LegsVel!");
-        }
-        #endregion
-
-        #region antennas
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[1]
-        {
-            x => x.MatchCall<EggBugGraphics>("get_ShowEggs"),
-        })) { }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate antennas skip!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<EggBugGraphics>("bug"),
-            x => x.MatchCallvirt<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _)
-        })) { }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate antennas skip2!");
-        }
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<EggBugGraphics>("antennas"),
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate antennas target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<EggBugGraphics>("bug"),
-            x => x.MatchCallvirt<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<EggBugGraphics>(OpCodes.Ldfld, "bug");
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate antennas!");
-        }
-        #endregion
-    }
-
+    #region EggBug
     static void ILEggBugDie(ILContext il)
     {
         ILCursor val = new(il);
@@ -319,7 +78,6 @@ internal class ILHooks
         }
         #endregion
     }
-
     static void ILEggBugUpdate(ILContext il)
     {
         ILCursor val = new(il);
@@ -612,14 +370,258 @@ internal class ILHooks
         }
         #endregion
     }
+    #endregion
+
+    #region EggBugGraphics
+    static void ILEggBugGraphicsUpdate(ILContext il)
+    {
+        ILCursor val = new(il);
+        ILLabel target = null;
+
+        #region legsDangleCounter
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<EggBugGraphics>("bug"),
+            x => x.MatchCallvirt<EggBug>("get_Footing"),
+            x => x.MatchBrtrue(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate legsDangleCounter target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<EggBugGraphics>("bug"),
+            x => x.MatchCallvirt<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<EggBugGraphics>(OpCodes.Ldfld, "bug");
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate legsDangleCounter!");
+        }
+        #endregion
+
+        #region zRotat
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[7]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<EggBugGraphics>("bug"),
+            x => x.MatchLdfld<UpdatableAndDeletable>("room"),
+            x => x.MatchLdfld<Room>("aimap"),
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<EggBugGraphics>("bug"),
+            x => x.MatchCallvirt<Creature>("get_mainBodyChunk"),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate zRotat target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<EggBugGraphics>("bug"),
+            x => x.MatchCallvirt<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<EggBugGraphics>(OpCodes.Ldfld, "bug");
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate zRotat!");
+        }
+        #endregion
+
+        #region aNormalize
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdloc(11),
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<EggBugGraphics>("bug"),
+            x => x.MatchLdfld<EggBug>("travelDir")
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate aNormalize target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<EggBugGraphics>("bug"),
+            x => x.MatchCallvirt<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<EggBugGraphics>(OpCodes.Ldfld, "bug");
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate aNormalize!");
+        }
+        #endregion
+
+        #region LegsVel
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[1]
+        {
+            x => x.MatchLdfld<EggBugGraphics>("legsDangleCounter"),
+        })) { }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate LegsVel skip!");
+        }
+
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<EggBugGraphics>("bug"),
+            x => x.MatchCallvirt<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _)
+        })) { }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate LegsVel skip2!");
+        }
+
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<EggBugGraphics>("legs"),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate LegsVel target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<EggBugGraphics>("bug"),
+            x => x.MatchCallvirt<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<EggBugGraphics>(OpCodes.Ldfld, "bug");
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate LegsVel!");
+        }
+        #endregion
+
+        #region antennas
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[1]
+        {
+            x => x.MatchCall<EggBugGraphics>("get_ShowEggs"),
+        })) { }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate antennas skip!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<EggBugGraphics>("bug"),
+            x => x.MatchCallvirt<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _)
+        })) { }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate antennas skip2!");
+        }
+
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<EggBugGraphics>("antennas"),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILEggBugGraphicsUpdate antennas target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<EggBugGraphics>("bug"),
+            x => x.MatchCallvirt<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<EggBugGraphics>(OpCodes.Ldfld, "bug");
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILEggBugGraphicsUpdate antennas!");
+        }
+        #endregion
+    }
 
     public static bool EggBugEggs(EggBug self)
     {
         return ShadowOfOptions.egg_egg.Value && !self.FireBug && IsComa(self);
     }
-
     public static bool FireBugSpears(EggBug self)
     {
         return ShadowOfOptions.fire_spear.Value && IsComa(self);
     }
+    #endregion
 }

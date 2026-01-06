@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System;
-using UnityEngine;
+
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation.BigSpiderHooks;
@@ -10,15 +10,15 @@ internal class ILHooks
 {
     public static void Apply()
     {
+        IL.BigSpider.BabyPuff += ILBigSpiderBabyPuff;
         IL.BigSpider.Update += ILBigSpiderUpdate;
-
-        IL.BigSpiderGraphics.Update += ILBigSpiderGraphicsUpdate;
-
         IL.BigSpider.Violence += ILBigSpiderViolence;
 
-        IL.BigSpider.BabyPuff += ILBigSpiderBabyPuff;
+        IL.BigSpiderGraphics.Update += ILBigSpiderGraphicsUpdate;
     }
 
+    #region BigSpider
+    #region BabyPuff
     static void ILBigSpiderBabyPuff(ILContext il)
     {
         ILCursor val = new(il);
@@ -94,7 +94,6 @@ internal class ILHooks
         }
         #endregion
     }
-
     public static bool BigSpiderBabyPuff(BigSpider self)
     {
         if (ShadowOfOptions.spid_mother.Value && ShadowOfOptions.spid_state.Value != "Disabled" && inconstorage.TryGetValue(self.abstractCreature, out InconData data) && data.isAlive)
@@ -103,7 +102,6 @@ internal class ILHooks
         }
         return true;
     }
-
     public static bool BigSpiderBabyPuffManual(BigSpider self)
     {
         if (inconstorage.TryGetValue(self.abstractCreature, out InconData data) && data.spiderMotherWasDead)
@@ -112,7 +110,176 @@ internal class ILHooks
         }
         return false;
     }
+    #endregion
 
+    static void ILBigSpiderUpdate(ILContext il)
+    {
+        ILCursor val = new(il);
+        ILLabel target = null;
+
+        #region Bleed
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCallvirt<Creature>("Die")
+        }))
+        {
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(delegate (Creature creature)
+            {
+                ILHooksMisc.TryAddKillFeedEntry(creature, "Bleed");
+            });
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate Bleed!");
+        }
+        #endregion
+
+        #region Legs
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<UpdatableAndDeletable>("room"),
+            x => x.MatchLdfld<Room>("aimap"),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILBigSpiderUpdate Legs target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate Legs!");
+        }
+        #endregion
+
+        #region NoAct
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<BigSpider>("get_Footing"),
+            x => x.MatchBrfalse(out _),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILBigSpiderUpdate NoAct target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdcI4(0),
+            x => x.MatchStfld<BigSpider>("footingCounter")
+        }))
+        {
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(IsComa);
+            val.Emit(OpCodes.Brtrue, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate NoAct!");
+        }
+        #endregion
+
+        #region Footing
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<BigSpider>("get_Footing"),
+            x => x.MatchBrfalse(out target)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(IsComa);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate Footing!");
+        }
+        #endregion
+
+        #region NoStun
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<BigSpider>("spitter"),
+            x => x.MatchBrfalse(out target)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(IsComa);
+            val.Emit(OpCodes.Brtrue, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate NoStun!");
+        }
+        #endregion
+
+        #region Flee
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<BigSpider>("get_Footing"),
+            x => x.MatchBrtrue(out _),
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILBigSpiderUpdate Flee target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _)
+        }))
+        {
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(IsComa);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate Flee!");
+        }
+        #endregion
+    }
     static void ILBigSpiderViolence(ILContext il)
     {
         ILCursor val = new(il);
@@ -152,7 +319,9 @@ internal class ILHooks
         }
         #endregion
     }
+    #endregion
 
+    #region BigSpiderGraphics
     static void ILBigSpiderGraphicsUpdate(ILContext il)
     {
         ILCursor val = new(il);
@@ -374,173 +543,5 @@ internal class ILHooks
         }
         #endregion
     }
-
-    static void ILBigSpiderUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-        ILLabel target = null;
-
-        #region Bleed
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCallvirt<Creature>("Die")
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(delegate (Creature creature)
-            {
-                ILHooksMisc.TryAddKillFeedEntry(creature, "Bleed");
-            });
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate Bleed!");
-        }
-        #endregion
-
-        #region Legs
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<UpdatableAndDeletable>("room"),
-            x => x.MatchLdfld<Room>("aimap"),
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILBigSpiderUpdate Legs target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate Legs!");
-        }
-        #endregion
-
-        #region NoAct
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<BigSpider>("get_Footing"),
-            x => x.MatchBrfalse(out _),
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILBigSpiderUpdate NoAct target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdcI4(0),
-            x => x.MatchStfld<BigSpider>("footingCounter")
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(IsComa);
-            val.Emit(OpCodes.Brtrue, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate NoAct!");
-        }
-        #endregion
-
-        #region Footing
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<BigSpider>("get_Footing"),
-            x => x.MatchBrfalse(out target)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(IsComa);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate Footing!");
-        }
-        #endregion
-
-        #region NoStun
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<BigSpider>("spitter"),
-            x => x.MatchBrfalse(out target)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(IsComa);
-            val.Emit(OpCodes.Brtrue, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate NoStun!");
-        }
-        #endregion
-
-        #region Flee
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<BigSpider>("get_Footing"),
-            x => x.MatchBrtrue(out _),
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILBigSpiderUpdate Flee target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _)
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(IsComa);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSpiderUpdate Flee!");
-        }
-        #endregion
-    }
+    #endregion
 }

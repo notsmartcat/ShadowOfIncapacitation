@@ -1,7 +1,7 @@
-﻿using BepInEx;
-using Mono.Cecil.Cil;
+﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System;
+
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation.ScavengerHooks;
@@ -10,170 +10,18 @@ internal class ILHooks
 {
     public static void Apply()
     {
-        IL.ScavengerGraphics.Update += ILScavengerGraphicsUpdate;
-
         IL.Scavenger.Update += ILScavengerUpdate;
 
-        IL.ScavengerGraphics.ScavengerHand.Update += ILScavengerHandUpdate;
-
-        IL.ScavengerGraphics.ScavengerLeg.Update += ILScavengerLegUpdate;
-
         IL.ScavengerGraphics.ShockReaction += ILScavengerGraphicsShockReaction;
+        IL.ScavengerGraphics.Update += ILScavengerGraphicsUpdate;
+
+        IL.ScavengerGraphics.ScavengerHand.Update += ILScavengerHandUpdate;
+        IL.ScavengerGraphics.ScavengerLeg.Update += ILScavengerLegUpdate;
 
         IL.ScavengerOutpost.GuardOutpostModule.Utility += ILGuardOutpostModuleUtility;
     }
 
-    static void ILGuardOutpostModuleUtility(ILContext il)
-    {
-        ILCursor val = new(il);
-        ILLabel target = null;
-
-        #region normal
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchLdcR4(0.0f),
-            x => x.MatchRet()
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILGuardOutpostModuleUtility target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<ScavengerOutpost.GuardOutpostModule>("outpost"),
-            x => x.MatchBrtrue(out _)
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<ScavengerOutpost.GuardOutpostModule>(OpCodes.Call, "get_scavAI");
-            val.Emit<ScavengerAI>(OpCodes.Ldfld, "scavenger");
-            val.Emit<Creature>(OpCodes.Callvirt, "get_dead");
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILGuardOutpostModuleUtility!");
-        }
-        #endregion
-    }
-
-    static void ILScavengerGraphicsShockReaction(ILContext il)
-    {
-        ILCursor val = new(il);
-        ILLabel target = null;
-
-        #region normal
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<ScavengerGraphics>("scavenger"),
-            x => x.MatchCallvirt<Creature>("get_stun")
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILScavengerGraphicsShockReaction target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<ScavengerGraphics>("scavenger"),
-            x => x.MatchCallvirt<Creature>("get_dead"),
-            x => x.MatchBrtrue(out _),
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<ScavengerGraphics>(OpCodes.Ldfld, "scavenger");
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILScavengerGraphicsShockReaction!");
-        }
-        #endregion
-    }
-
-    static void ILScavengerLegUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-        ILLabel target = null;
-
-        #region normal
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<ScavengerGraphics.ScavengerLeg>("get_scavenger"),
-            x => x.MatchLdfld<Scavenger>("movMode")
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILScavengerLegUpdate target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<ScavengerGraphics.ScavengerLeg>("get_scavenger"),
-            x => x.MatchCallvirt<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _),
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<ScavengerGraphics.ScavengerLeg>(OpCodes.Call, "get_scavenger");
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILScavengerLegUpdate!");
-        }
-        #endregion
-    }
-
-    static void ILScavengerHandUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-        ILLabel target = null;
-
-        #region normal
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<ScavengerGraphics.ScavengerHand>("get_scavenger"),
-            x => x.MatchCallvirt<Creature>("get_Consious"),
-            x => x.MatchBrtrue(out target),
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<ScavengerGraphics.ScavengerHand>(OpCodes.Call, "get_scavenger");
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILScavengerHandUpdate!");
-        }
-        #endregion
-    }
-
+    #region Scavenger
     static void ILScavengerUpdate(ILContext il)
     {
         ILCursor val = new(il);
@@ -267,7 +115,50 @@ internal class ILHooks
         }
         #endregion
     }
+    #endregion
 
+    #region ScavengerGraphics
+    static void ILScavengerGraphicsShockReaction(ILContext il)
+    {
+        ILCursor val = new(il);
+        ILLabel target = null;
+
+        #region normal
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<ScavengerGraphics>("scavenger"),
+            x => x.MatchCallvirt<Creature>("get_stun")
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILScavengerGraphicsShockReaction target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<ScavengerGraphics>("scavenger"),
+            x => x.MatchCallvirt<Creature>("get_dead"),
+            x => x.MatchBrtrue(out _),
+        }))
+        {
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<ScavengerGraphics>(OpCodes.Ldfld, "scavenger");
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILScavengerGraphicsShockReaction!");
+        }
+        #endregion
+    }
     static void ILScavengerGraphicsUpdate(ILContext il)
     {
         ILCursor val = new(il);
@@ -403,4 +294,115 @@ internal class ILHooks
         }
         #endregion
     }
+
+    static void ILScavengerHandUpdate(ILContext il)
+    {
+        ILCursor val = new(il);
+        ILLabel target = null;
+
+        #region normal
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<ScavengerGraphics.ScavengerHand>("get_scavenger"),
+            x => x.MatchCallvirt<Creature>("get_Consious"),
+            x => x.MatchBrtrue(out target),
+        }))
+        {
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<ScavengerGraphics.ScavengerHand>(OpCodes.Call, "get_scavenger");
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILScavengerHandUpdate!");
+        }
+        #endregion
+    }
+    static void ILScavengerLegUpdate(ILContext il)
+    {
+        ILCursor val = new(il);
+        ILLabel target = null;
+
+        #region normal
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<ScavengerGraphics.ScavengerLeg>("get_scavenger"),
+            x => x.MatchLdfld<Scavenger>("movMode")
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILScavengerLegUpdate target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<ScavengerGraphics.ScavengerLeg>("get_scavenger"),
+            x => x.MatchCallvirt<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _),
+        }))
+        {
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<ScavengerGraphics.ScavengerLeg>(OpCodes.Call, "get_scavenger");
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILScavengerLegUpdate!");
+        }
+        #endregion
+    }
+    #endregion
+
+    #region ScavengerOutpost
+    static void ILGuardOutpostModuleUtility(ILContext il)
+    {
+        ILCursor val = new(il);
+        ILLabel target = null;
+
+        #region normal
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
+        {
+            x => x.MatchLdcR4(0.0f),
+            x => x.MatchRet()
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILGuardOutpostModuleUtility target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<ScavengerOutpost.GuardOutpostModule>("outpost"),
+            x => x.MatchBrtrue(out _)
+        }))
+        {
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<ScavengerOutpost.GuardOutpostModule>(OpCodes.Call, "get_scavAI");
+            val.Emit<ScavengerAI>(OpCodes.Ldfld, "scavenger");
+            val.Emit<Creature>(OpCodes.Callvirt, "get_dead");
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILGuardOutpostModuleUtility!");
+        }
+        #endregion
+    }
+    #endregion
 }

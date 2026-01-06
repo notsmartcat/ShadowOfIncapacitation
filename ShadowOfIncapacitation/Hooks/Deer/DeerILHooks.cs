@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System;
-using UnityEngine;
+
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation.DeerHooks;
@@ -15,90 +15,7 @@ internal class ILHooks
         IL.DeerGraphics.Update += ILDeerGraphicsUpdate;
     }
 
-    private static void ILDeerGraphicsUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-        ILLabel target = null;
-
-        #region Blink
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<DeerGraphics>("get_deer"),
-            x => x.MatchCallvirt<Deer>("get_Kneeling"),
-            x => x.MatchBrtrue(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILDeerGraphicsUpdate Blink target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<DeerGraphics>("get_deer"),
-            x => x.MatchCallvirt<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<DeerGraphics>(OpCodes.Call, "get_deer");
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILDeerGraphicsUpdate Blink!");
-        }
-        #endregion
-
-        #region antlerRandomMovementVel
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<DeerGraphics>("antlerRandomMovementVel"),
-            x => x.MatchLdcR4(-1)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILDeerGraphicsUpdate antlerRandomMovementVel target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<DeerGraphics>("get_deer"),
-            x => x.MatchCallvirt<Creature>("get_Consious"),
-            x => x.MatchBrfalse(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<DeerGraphics>(OpCodes.Call, "get_deer");
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILDeerGraphicsUpdate antlerRandomMovementVel!");
-        }
-        #endregion
-    }
-
+    #region Deer
     static void ILDeerUpdate(ILContext il)
     {
         ILCursor val = new(il);
@@ -128,7 +45,7 @@ internal class ILHooks
         if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[1]
         {
             x => x.MatchLdcI4(4)
-        })){}
+        })) { }
         else
         {
             Incapacitation.Logger.LogInfo(all + "Could not find match ILDeerUpdate Push2 Skip!");
@@ -211,4 +128,91 @@ internal class ILHooks
         }
         #endregion
     }
+    #endregion
+
+    #region DeerGraphics
+    static void ILDeerGraphicsUpdate(ILContext il)
+    {
+        ILCursor val = new(il);
+        ILLabel target = null;
+
+        #region Blink
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<DeerGraphics>("get_deer"),
+            x => x.MatchCallvirt<Deer>("get_Kneeling"),
+            x => x.MatchBrtrue(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILDeerGraphicsUpdate Blink target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<DeerGraphics>("get_deer"),
+            x => x.MatchCallvirt<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<DeerGraphics>(OpCodes.Call, "get_deer");
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILDeerGraphicsUpdate Blink!");
+        }
+        #endregion
+
+        #region antlerRandomMovementVel
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<DeerGraphics>("antlerRandomMovementVel"),
+            x => x.MatchLdcR4(-1)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            target = val.MarkLabel();
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match for ILDeerGraphicsUpdate antlerRandomMovementVel target!");
+        }
+
+        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[4]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCall<DeerGraphics>("get_deer"),
+            x => x.MatchCallvirt<Creature>("get_Consious"),
+            x => x.MatchBrfalse(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<DeerGraphics>(OpCodes.Call, "get_deer");
+            val.EmitDelegate(IsIncon);
+            val.Emit(OpCodes.Brtrue_S, target);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILDeerGraphicsUpdate antlerRandomMovementVel!");
+        }
+        #endregion
+    }
+    #endregion
 }
