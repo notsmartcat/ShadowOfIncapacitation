@@ -425,7 +425,6 @@ internal class MiscHooks
 
                 if (ShadowOfOptions.debug_logs.Value)
                     Debug.Log(all + self + " reached the insta die threshold and died");
-
                 return;
             }
 

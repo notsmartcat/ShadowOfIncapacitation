@@ -242,7 +242,7 @@ public class Incapacitation : BaseUnityPlugin
 
     public static void ViolenceCheck(Creature receiver, InconData data, string killType, Creature sender = null)
     {
-        if (receiver == null || receiver.abstractCreature == null || killType == null)
+        if (receiver == null || receiver.abstractCreature == null || killType == null || !data.isAlive)
         {
             return;
         }
@@ -264,49 +264,49 @@ public class Incapacitation : BaseUnityPlugin
             case "Bleed":
                 unconChance = ShadowOfOptions.uncon_chance_bleed.Value;
                 inconChance = ShadowOfOptions.incon_chance_bleed.Value;
-                if (ShadowOfOptions.debug_logs.Value)
+                if (ShadowOfOptions.debug_logs.Value && !receiver.dead)
                     Debug.Log(all + receiver + " died by Bleed");
                 break;
             case "Blunt":
                 unconChance = ShadowOfOptions.uncon_chance_blunt.Value;
                 inconChance = ShadowOfOptions.incon_chance_blunt.Value;
-                if (ShadowOfOptions.debug_logs.Value)
+                if (ShadowOfOptions.debug_logs.Value && !receiver.dead)
                     Debug.Log(all + receiver + " died by Blunt");
                 break;
             case "Stab":
                 unconChance = ShadowOfOptions.uncon_chance_stab.Value;
                 inconChance = ShadowOfOptions.incon_chance_stab.Value;
-                if (ShadowOfOptions.debug_logs.Value)
+                if (ShadowOfOptions.debug_logs.Value && !receiver.dead)
                     Debug.Log(all + receiver + " died by Stab");
                 break;
             case "Explosion":
                 unconChance = ShadowOfOptions.uncon_chance_explosion.Value;
                 inconChance = ShadowOfOptions.incon_chance_explosion.Value;
-                if (ShadowOfOptions.debug_logs.Value)
+                if (ShadowOfOptions.debug_logs.Value && !receiver.dead)
                     Debug.Log(all + receiver + " died by Explosion");
                 break;
             case "Electric":
                 unconChance = ShadowOfOptions.uncon_chance_electric.Value;
                 inconChance = ShadowOfOptions.incon_chance_electric.Value;
-                if (ShadowOfOptions.debug_logs.Value)
+                if (ShadowOfOptions.debug_logs.Value && !receiver.dead)
                     Debug.Log(all + receiver + " died by Electric");
                 break;
             case "Uncon":
                 unconChance = 100;
                 inconChance = 100;
-                if (ShadowOfOptions.debug_logs.Value)
+                if (ShadowOfOptions.debug_logs.Value && !receiver.dead)
                     Debug.Log(all + receiver + " forced to Uncon");
                 break;
             case "Incon":
                 unconChance = 0;
                 inconChance = 100;
-                if (ShadowOfOptions.debug_logs.Value)
+                if (ShadowOfOptions.debug_logs.Value && !receiver.dead)
                     Debug.Log(all + receiver + " forced to Incon");
                 break;
             default:
                 unconChance = 0;
                 inconChance = 0;
-                if (ShadowOfOptions.debug_logs.Value)
+                if (ShadowOfOptions.debug_logs.Value && !receiver.dead)
                     Debug.Log(all + receiver + " died by Null");
                 break;
         }
@@ -324,13 +324,13 @@ public class Incapacitation : BaseUnityPlugin
 
         if (chance < unconChance)
         {
+            if (ShadowOfOptions.debug_logs.Value && !data.isUncon)
+                Debug.Log(all + receiver + " is Unconscious, Chance = " + chance + " lower then " + unconChance);
             data.isUncon = true;
-            if (ShadowOfOptions.debug_logs.Value)
-                Debug.Log(all + receiver + " is Uncontious, Chance = " + chance + " lower then " + unconChance);
         }
         else if (chance < inconChance)
         {
-            if (ShadowOfOptions.debug_logs.Value)
+            if (ShadowOfOptions.debug_logs.Value && !data.isUncon && !receiver.dead)
                 Debug.Log(all + receiver + " is Incapacitated, Chance = " + chance + " lower then " + inconChance);
         }
         else if (ShadowOfOptions.slugpup_never_die.Value && ModManager.MSC && receiver.abstractCreature.creatureTemplate.type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC)

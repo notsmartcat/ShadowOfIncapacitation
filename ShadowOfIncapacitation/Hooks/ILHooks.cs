@@ -382,14 +382,6 @@ internal class ILHooksMisc
         }
         #endregion
     }
-
-    public static void TryAddKillFeedEntry(Creature receiver, string killType)
-    {
-        if (receiver != null && receiver.abstractCreature != null && inconstorage.TryGetValue(receiver.abstractCreature, out InconData data))
-        {
-            ViolenceCheck(receiver, data, killType);
-        }
-    }
     #endregion
 
     #region DaddyCorruption
@@ -761,7 +753,7 @@ internal class ILHooksMisc
         {
             val.MoveAfterLabels();
 
-            val.Emit(OpCodes.Ldarg_0);
+            val.Emit(OpCodes.Ldarg_1);
             val.Emit(OpCodes.Isinst, typeof(Creature));
             val.EmitDelegate(delegate (Creature creature)
             {
@@ -793,7 +785,7 @@ internal class ILHooksMisc
         {
             val.MoveAfterLabels();
 
-            val.Emit(OpCodes.Ldarg_0);
+            val.Emit(OpCodes.Ldarg_1);
             val.Emit(OpCodes.Isinst, typeof(Creature));
             val.EmitDelegate(delegate (Creature creature)
             {
@@ -1238,6 +1230,13 @@ internal class ILHooksMisc
         }
     }
 
+    public static void TryAddKillFeedEntry(Creature receiver, string killType)
+    {
+        if (receiver != null && receiver.abstractCreature != null && inconstorage.TryGetValue(receiver.abstractCreature, out InconData data))
+        {
+            ViolenceCheck(receiver, data, killType);
+        }
+    }
 }
 
 /*

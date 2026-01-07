@@ -311,7 +311,7 @@ internal class ILHooks
         #region NoAll
         if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[1]
         {
-            x =>x.MatchCall(typeof(RWCustom.Custom).GetMethod(nameof(RWCustom.Custom.AimFromOneVectorToAnother)))
+            x => x.MatchCall(typeof(RWCustom.Custom).GetMethod(nameof(RWCustom.Custom.AimFromOneVectorToAnother)))
         })) {}
         else
         {
@@ -336,7 +336,7 @@ internal class ILHooks
         {
             x => x.MatchLdarg(0),
             x => x.MatchLdfld<FlyGraphics>("fly"),
-            x => x.MatchLdfld<Creature>("get_Consious"),
+            x => x.MatchCallvirt<Creature>("get_Consious"),
         }))
         {
             val.MoveAfterLabels();
