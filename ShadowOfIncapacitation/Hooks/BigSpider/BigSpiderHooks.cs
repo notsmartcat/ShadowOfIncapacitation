@@ -15,6 +15,9 @@ internal class Hooks
         On.BigSpider.Revive += BigSpiderRevive;
         On.BigSpider.Update += BigSpiderUpdate;
 
+        On.BigSpiderAI.Update += BigSpiderAIUpdate;
+        On.BigSpiderAI.WantToStayInDenUntilEndOfCycle += BigSpiderAIWantToStayInDenUntilEndOfCycle;
+
         On.BigSpiderGraphics.Update += BigSpiderGraphicsUpdate;
     }
 
@@ -704,6 +707,19 @@ internal class Hooks
         }
 
         self.room.PlaySound(SoundID.Big_Spider_Jump, self.mainBodyChunk, false, soundVol, 1f);
+    }
+    #endregion
+
+    #region BigSpiderAI
+    static void BigSpiderAIUpdate(On.BigSpiderAI.orig_Update orig, BigSpiderAI self)
+    {
+        orig(self);
+
+        MiscHooks.ReturnToDenUpdate(self);
+    }
+    static bool BigSpiderAIWantToStayInDenUntilEndOfCycle(On.BigSpiderAI.orig_WantToStayInDenUntilEndOfCycle orig, BigSpiderAI self)
+    {
+        return MiscHooks.ReturnToDenWantToStayInDenUntilEndOfCycle(self) || orig(self);
     }
     #endregion
 

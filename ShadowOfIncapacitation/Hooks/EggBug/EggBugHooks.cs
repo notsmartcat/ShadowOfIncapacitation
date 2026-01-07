@@ -15,6 +15,8 @@ internal class Hooks
         On.EggBug.Update += EggBugUpdate;
 
         On.EggBugAI.CreatureSpotted += EggBugAICreatureSpotted;
+        On.EggBugAI.Update += EggBugAIUpdate;
+        On.EggBugAI.WantToStayInDenUntilEndOfCycle += EggBugAIWantToStayInDenUntilEndOfCycle;
 
         On.EggBugGraphics.DrawSprites += EggBugGraphicsDrawSprites;
         On.EggBugGraphics.Update += EggBugGraphicsUpdate;
@@ -386,6 +388,16 @@ internal class Hooks
             self.fear = Custom.LerpAndTick(self.fear, 1f, 0.3f, 0.142857149f);
             self.bug.Squirt(self.fear);
         }
+    }
+    static void EggBugAIUpdate(On.EggBugAI.orig_Update orig, EggBugAI self)
+    {
+        orig(self);
+
+        MiscHooks.ReturnToDenUpdate(self);
+    }
+    static bool EggBugAIWantToStayInDenUntilEndOfCycle(On.EggBugAI.orig_WantToStayInDenUntilEndOfCycle orig, EggBugAI self)
+    {
+        return MiscHooks.ReturnToDenWantToStayInDenUntilEndOfCycle(self) || orig(self);
     }
     #endregion
 

@@ -14,6 +14,9 @@ internal class Hooks
         On.Scavenger.Collide += ScavengerCollide;
         On.Scavenger.Update += ScavengerUpdate;
 
+        On.ScavengerAI.Update += ScavengerAIUpdate;
+        On.ScavengerAI.WantToStayInDenUntilEndOfCycle += ScavengerAIWantToStayInDenUntilEndOfCycle;
+
         On.ScavengerGraphics.DrawSprites += ScavengerGraphicsDrawSprites;
         On.ScavengerGraphics.Update += ScavengerGraphicsUpdate;
 
@@ -22,6 +25,7 @@ internal class Hooks
         new Hook(
             typeof(Scavenger).GetProperty(nameof(Scavenger.HeadLookPoint)).GetGetMethod(), ShadowOfScavengerHeadLookPoint);
     }
+
     #region Scavenger
     static void ScavengerCollide(On.Scavenger.orig_Collide orig, Scavenger self, PhysicalObject otherObject, int myChunk, int otherChunk)
     {
@@ -398,6 +402,19 @@ internal class Hooks
             data.stunCountdown = data.stunTimer + UnityEngine.Random.Range(30, 71);
         }
         #endregion
+    }
+    #endregion
+
+    #region ScavengerAI
+    static void ScavengerAIUpdate(On.ScavengerAI.orig_Update orig, ScavengerAI self)
+    {
+        orig(self);
+
+        MiscHooks.ReturnToDenUpdate(self);
+    }
+    static bool ScavengerAIWantToStayInDenUntilEndOfCycle(On.ScavengerAI.orig_WantToStayInDenUntilEndOfCycle orig, ScavengerAI self)
+    {
+        return MiscHooks.ReturnToDenWantToStayInDenUntilEndOfCycle(self) || orig(self);
     }
     #endregion
 

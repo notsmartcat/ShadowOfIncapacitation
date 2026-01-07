@@ -14,6 +14,9 @@ internal class Hooks
         On.Centipede.Update += CentipedeUpdate;
         On.Centipede.UpdateGrasp += CentipedeUpdateGrasp;
 
+        On.CentipedeAI.Update += CentipedeAIUpdate;
+        On.CentipedeAI.WantToStayInDenUntilEndOfCycle += CentipedeAIWantToStayInDenUntilEndOfCycle;
+
         On.CentipedeGraphics.DrawSprites += CentipedeGraphicsDrawSprites;
         On.CentipedeGraphics.Update += CentipedeGraphicsUpdate;
     }
@@ -487,6 +490,19 @@ internal class Hooks
             }
         }
         catch (Exception e) { Incapacitation.Logger.LogError(e); }
+    }
+    #endregion
+
+    #region CentipedeAI
+    static void CentipedeAIUpdate(On.CentipedeAI.orig_Update orig, CentipedeAI self)
+    {
+        orig(self);
+
+        MiscHooks.ReturnToDenUpdate(self);
+    }
+    static bool CentipedeAIWantToStayInDenUntilEndOfCycle(On.CentipedeAI.orig_WantToStayInDenUntilEndOfCycle orig, CentipedeAI self)
+    {
+        return MiscHooks.ReturnToDenWantToStayInDenUntilEndOfCycle(self) || orig(self);
     }
     #endregion
 

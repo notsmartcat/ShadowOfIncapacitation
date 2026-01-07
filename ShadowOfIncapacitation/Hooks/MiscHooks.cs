@@ -22,6 +22,7 @@ internal class MiscHooks
         On.Creature.Violence += CreatureViolence;
 
         On.StuckTracker.Utility += StuckTrackerUtility;
+        On.InjuryTracker.Utility += InjuryTrackerUtility;
 
         On.Tracker.CreatureNoticed += TrackerCreatureNoticed;
     }
@@ -512,6 +513,10 @@ internal class MiscHooks
     {
         return self.AI.creature.realizedCreature != null && IsComa(self.AI.creature.realizedCreature) ? 0 : orig(self);
     }
+    static float InjuryTrackerUtility(On.InjuryTracker.orig_Utility orig, InjuryTracker self)
+    {
+        return self.AI.creature.realizedCreature != null && IsComa(self.AI.creature.realizedCreature) ? 0 : orig(self);
+    }
 
     static Tracker.CreatureRepresentation TrackerCreatureNoticed(On.Tracker.orig_CreatureNoticed orig, Tracker self, AbstractCreature crit)
     {
@@ -691,6 +696,20 @@ internal class MiscHooks
         }
 
         return chance;
+    }
+
+    public static void ReturnToDenUpdate(ArtificialIntelligence self)
+    {
+        if (self == null || self.creature == null || self.creature.abstractAI == null || self.creature.abstractAI.destination == null || !inconstorage.TryGetValue(self.creature, out InconData data) || !data.returnToDen || self.denFinder == null || self.denFinder.denPosition == null)
+        {
+            return;
+        }
+
+        self.creature.abstractAI.SetDestination(self.denFinder.denPosition.Value);
+    }
+    public static bool ReturnToDenWantToStayInDenUntilEndOfCycle(ArtificialIntelligence self)
+    {
+        return inconstorage.TryGetValue(self.creature, out InconData data) && data.returnToDen;
     }
     #endregion
 }

@@ -12,6 +12,9 @@ internal class Hooks
     {
         On.Cicada.Update += CicadaUpdate;
 
+        On.CicadaAI.Update += CicadaAIUpdate;
+        On.CicadaAI.WantToStayInDenUntilEndOfCycle += CicadaAIWantToStayInDenUntilEndOfCycle;
+
         On.CicadaGraphics.DrawSprites += CicadaGraphicsDrawSprites;
         On.CicadaGraphics.Update += CicadaGraphicsUpdate;
     }
@@ -296,6 +299,19 @@ internal class Hooks
             data.stunCountdown = data.stunTimer + UnityEngine.Random.Range(10, 21);
         }
         #endregion
+    }
+    #endregion
+
+    #region CicadaAI
+    static void CicadaAIUpdate(On.CicadaAI.orig_Update orig, CicadaAI self)
+    {
+        orig(self);
+
+        MiscHooks.ReturnToDenUpdate(self);
+    }
+    static bool CicadaAIWantToStayInDenUntilEndOfCycle(On.CicadaAI.orig_WantToStayInDenUntilEndOfCycle orig, CicadaAI self)
+    {
+        return MiscHooks.ReturnToDenWantToStayInDenUntilEndOfCycle(self) || orig(self);
     }
     #endregion
 

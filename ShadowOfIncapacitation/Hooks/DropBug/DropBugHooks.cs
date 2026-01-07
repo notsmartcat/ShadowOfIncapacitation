@@ -13,6 +13,9 @@ internal class Hooks
         On.DropBug.Collide += DropBugCollide;
         On.DropBug.Update += DropBugUpdate;
 
+        On.DropBugAI.Update += DropBugAIUpdate;
+        On.DropBugAI.WantToStayInDenUntilEndOfCycle += DropBugAIWantToStayInDenUntilEndOfCycle;
+
         On.DropBugGraphics.DrawSprites += DropBugGraphicsDrawSprites;
         On.DropBugGraphics.Update += DropBugGraphicsUpdate;
     }
@@ -454,6 +457,19 @@ internal class Hooks
             self.outOfWaterFooting = 0;
         }
         #endregion
+    }
+    #endregion
+
+    #region DropBugAI
+    static void DropBugAIUpdate(On.DropBugAI.orig_Update orig, DropBugAI self)
+    {
+        orig(self);
+
+        MiscHooks.ReturnToDenUpdate(self);
+    }
+    static bool DropBugAIWantToStayInDenUntilEndOfCycle(On.DropBugAI.orig_WantToStayInDenUntilEndOfCycle orig, DropBugAI self)
+    {
+        return MiscHooks.ReturnToDenWantToStayInDenUntilEndOfCycle(self) || orig(self);
     }
     #endregion
 

@@ -561,26 +561,16 @@ internal class Hooks
     {
         orig(self);
 
-        if (self == null || self.lizard == null || self.lizard.abstractCreature == null || self.creature == null || self.creature.abstractAI == null || self.creature.abstractAI.destination == null || !inconstorage.TryGetValue(self.lizard.abstractCreature, out InconData data) || !data.returnToDen || self.denFinder == null || self.denFinder.denPosition == null)
-        {
-            return;
-        }
-
-        self.creature.abstractAI.SetDestination(self.denFinder.denPosition.Value);
+        MiscHooks.ReturnToDenUpdate(self);
     }
     static bool LizardAIWantToStayInDenUntilEndOfCycle(On.LizardAI.orig_WantToStayInDenUntilEndOfCycle orig, LizardAI self)
     {
-        if (!inconstorage.TryGetValue(self.lizard.abstractCreature, out InconData data) || !data.returnToDen)
-        {
-            return orig(self);
-        }
-
-        return true;
+        return MiscHooks.ReturnToDenWantToStayInDenUntilEndOfCycle(self) || orig(self);
     }
 
     static float LizardInjuryTrackerUtility(On.LizardAI.LizardInjuryTracker.orig_Utility orig, LizardAI.LizardInjuryTracker self)
     {
-        return IsIncon(self.AI.creature.realizedCreature) ? 0 : orig(self);
+        return self.AI.creature.realizedCreature != null && IsIncon(self.AI.creature.realizedCreature) ? 0 : orig(self);
     }
     #endregion
 
