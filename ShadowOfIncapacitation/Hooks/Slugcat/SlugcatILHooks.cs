@@ -2,6 +2,7 @@
 using MonoMod.Cil;
 using System;
 using UnityEngine;
+
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation.SlugcatHooks;
@@ -11,20 +12,16 @@ internal class ILHooks
     public static void Apply()
     {
         IL.Player.ClassMechanicsSaint += ILPlayerClassMechanicsSaint;
-
+        IL.Player.EatMeatUpdate += ILPlayerEatMeatUpdate;
         IL.Player.LungUpdate += ILPlayerLungUpdate;
-
         IL.Player.TerrainImpact += ILPlayerTerrainImpact;
+
+        IL.Player.Update += ILPlayerUpdate;
 
         IL.Player.Tongue.Update += ILPlayerTongueUpdate;
 
-        IL.Player.EatMeatUpdate += ILPlayerEatMeatUpdate;
-
-        IL.PlayerGraphics.Update += ILPlayerGraphicsUpdate;
-
         IL.PlayerGraphics.DrawSprites += ILPlayerGraphicsDrawSprites;
-
-        IL.Player.Update += ILPlayerUpdate;
+        IL.PlayerGraphics.Update += ILPlayerGraphicsUpdate;
     }
 
     static void ILPlayerUpdate(ILContext il)
@@ -160,6 +157,169 @@ internal class ILHooks
         */
     }
 
+    #region Player
+    static void ILPlayerClassMechanicsSaint(ILContext il)
+    {
+        ILCursor val = new(il);
+
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdloc(18),
+            x => x.MatchIsinst(typeof(Creature)),
+            x => x.MatchCallvirt<Creature>("Die")
+        }))
+        {
+            val.Emit(OpCodes.Ldloc, 18);
+            val.Emit(OpCodes.Isinst, typeof(Creature));
+            val.EmitDelegate(ActuallyKill);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILPlayerClassMechanicsSaint!");
+        }
+    }
+
+    static void ILPlayerEatMeatUpdate(ILContext il)
+    {
+        ILCursor val = new(il);
+
+        if (val.TryGotoNext(MoveType.AfterLabel, new Func<Instruction, bool>[2]
+        {
+            x => x.MatchSub(),
+            x => x.MatchStfld<CreatureState>("meatLeft")
+        }))
+        {
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit(OpCodes.Ldarg_1);
+            val.EmitDelegate(PlayerEatMeatUpdate);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILPlayerEatMeatUpdate!");
+        }
+    }
+    public static void PlayerEatMeatUpdate(Player player, int graspIndex)
+    {
+        if (player.grasps[graspIndex].grabbed is not Creature self || !inconstorage.TryGetValue(self.abstractCreature, out InconData data) || !data.isAlive)
+        {
+            return;
+        }
+
+        if (self.State.meatLeft <= 0)
+        {
+            ActuallyKill(self);
+            return;
+        }
+
+        int chance = UnityEngine.Random.Range(0, 101);
+
+        if (IsIncon(self))
+        {
+            if (chance < 25)
+            {
+                ActuallyKill(self);
+            }
+            else if (chance < 50)
+            {
+                data.isUncon = true;
+            }
+        }
+        else
+        {
+            if (chance < 25)
+            {
+                ActuallyKill(self);
+            }
+        }
+    }
+
+    static void ILPlayerLungUpdate(ILContext il)
+    {
+        ILCursor val = new(il);
+
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCallvirt<Creature>("Die")
+        }))
+        {
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(ActuallyKill);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILPlayerLungUpdate Arti!");
+        }
+
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCallvirt<Creature>("Die"),
+            x => x.MatchBr(out _)
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(ActuallyKill);
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILPlayerLungUpdate Arti!");
+        }
+    }
+    static void ILPlayerTerrainImpact(ILContext il)
+    {
+        ILCursor val = new(il);
+
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchCallvirt<Creature>("Die")
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.EmitDelegate(delegate (Creature creature)
+            {
+                ILHooksMisc.TryAddKillFeedEntry(creature, "Blunt");
+            });
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILPlayerTerrainImpact!");
+        }
+    }
+
+    static void ILPlayerTongueUpdate(ILContext il)
+    {
+        ILCursor val = new(il);
+
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        {
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld<Player.Tongue>("player"),
+            x => x.MatchCallvirt<Creature>("Die")
+        }))
+        {
+            val.MoveAfterLabels();
+
+            val.Emit(OpCodes.Ldarg_0);
+            val.Emit<Player.Tongue>(OpCodes.Ldfld, "player");
+            val.EmitDelegate(delegate (Creature creature)
+            {
+                ILHooksMisc.TryAddKillFeedEntry(creature, "Electric");
+            });
+        }
+        else
+        {
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILPlayerTongueUpdate!");
+        }
+    }
+    #endregion
+
+    #region Player Graphics
     static void ILPlayerGraphicsDrawSprites(ILContext il)
     {
         ILCursor val = new(il);
@@ -331,24 +491,23 @@ internal class ILHooks
         }
         #endregion
     }
-
     public static void PlayerGraphicsDrawSprites(PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, int imgIndex)
     {
-        if (true && !inconstorage.TryGetValue(self.player.abstractCreature, out InconData data) || !IsComa(self.player))
+        if (!IsComa(self.player))
         {
             return;
         }
 
-        sLeaser.sprites[9].element = Futile.atlasManager.GetElementWithName(self.DefaultFaceSprite(sLeaser.sprites[9].scaleX, imgIndex));
+        sLeaser.sprites[9].element = !self.player.Stunned ? Futile.atlasManager.GetElementWithName(self.DefaultFaceSprite(sLeaser.sprites[9].scaleX, imgIndex)) : Futile.atlasManager.GetElementWithName("FaceStunned");
     }
     public static void PlayerGraphicsDrawSpritesVector(PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, Vector2 imgIndex)
     {
-        if (true && !inconstorage.TryGetValue(self.player.abstractCreature, out InconData data) || !IsComa(self.player))
+        if (!IsComa(self.player))
         {
             return;
         }
 
-        sLeaser.sprites[9].element = Futile.atlasManager.GetElementWithName(self.DefaultFaceSprite(sLeaser.sprites[9].scaleX, Mathf.RoundToInt(Mathf.Abs(RWCustom.Custom.AimFromOneVectorToAnother(new Vector2(0f, 0f), imgIndex) / 22.5f))));
+        sLeaser.sprites[9].element = !self.player.Stunned ? Futile.atlasManager.GetElementWithName(self.DefaultFaceSprite(sLeaser.sprites[9].scaleX, Mathf.RoundToInt(Mathf.Abs(RWCustom.Custom.AimFromOneVectorToAnother(new Vector2(0f, 0f), imgIndex) / 22.5f)))) : Futile.atlasManager.GetElementWithName("FaceStunned");
     }
 
     static void ILPlayerGraphicsUpdate(ILContext il)
@@ -495,166 +654,5 @@ internal class ILHooks
         }
         #endregion
     }
-
-    static void ILPlayerTongueUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld<Player.Tongue>("player"),
-            x => x.MatchCallvirt<Creature>("Die")
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit<Player.Tongue>(OpCodes.Ldfld, "player");
-            val.EmitDelegate(delegate (Creature creature)
-            {
-                ILHooksMisc.TryAddKillFeedEntry(creature, "Electric");
-            });
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILPlayerTongueUpdate!");
-        }
-    }
-
-    static void ILPlayerTerrainImpact(ILContext il)
-    {
-        ILCursor val = new(il);
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCallvirt<Creature>("Die")
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(delegate (Creature creature)
-            {
-                ILHooksMisc.TryAddKillFeedEntry(creature, "Blunt");
-            });
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILPlayerTerrainImpact!");
-        }
-    }
-
-    static void ILPlayerLungUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCallvirt<Creature>("Die")
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(ActuallyKill);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILPlayerLungUpdate Arti!");
-        }
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCallvirt<Creature>("Die"),
-            x => x.MatchBr(out _)
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(ActuallyKill);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILPlayerLungUpdate Arti!");
-        }
-    }
-
-    static void ILPlayerClassMechanicsSaint(ILContext il)
-    {
-        ILCursor val = new(il);
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdloc(18),
-            x => x.MatchIsinst(typeof(Creature)),
-            x => x.MatchCallvirt<Creature>("Die")
-        }))
-        {
-            val.Emit(OpCodes.Ldloc, 18);
-            val.Emit(OpCodes.Isinst, typeof(Creature));
-            val.EmitDelegate(ActuallyKill);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILPlayerClassMechanicsSaint!");
-        }
-    }
-
-    static void ILPlayerEatMeatUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-
-        if (val.TryGotoNext(MoveType.AfterLabel, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchSub(),
-            x => x.MatchStfld<CreatureState>("meatLeft")
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.Emit(OpCodes.Ldarg_1);
-            val.EmitDelegate(PlayerEatMeatUpdate);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILPlayerEatMeatUpdate!");
-        }
-    }
-
-    public static void PlayerEatMeatUpdate(Player player, int graspIndex)
-    {
-        if (player.grasps[graspIndex].grabbed is not Creature self || !inconstorage.TryGetValue(self.abstractCreature, out InconData data) || !data.isAlive)
-        {
-            return;
-        }
-
-        if (self.State.meatLeft <= 0)
-        {
-            ActuallyKill(self);
-            return;
-        }
-
-        int chance = UnityEngine.Random.Range(0, 101);
-
-        if (IsIncon(self))
-        {
-            if (chance < 25)
-            {
-                ActuallyKill(self);
-            }
-            else if (chance < 50)
-            {
-                data.isUncon = true;
-            }
-        }
-        else
-        {
-            if (chance < 25)
-            {
-                ActuallyKill(self);
-            }
-        }
-    }
+    #endregion
 }
