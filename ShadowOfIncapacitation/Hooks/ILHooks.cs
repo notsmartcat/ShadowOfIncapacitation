@@ -18,8 +18,6 @@ internal class ILHooksMisc
         IL.DaddyCorruption.EatenCreature.Update += ILDaddyCorruptionUpdate;
         IL.DaddyLongLegs.Eat += ILDaddyLongLegsEat;
 
-        IL.Hazer.Update += ILHazerUpdate;
-
         IL.InsectoidCreature.Update += ILInsectoidCreatureUpdate;
 
         IL.Leech.Attached += ILLeechAttached;
@@ -460,30 +458,6 @@ internal class ILHooksMisc
         if (daddyLongLegs.eatObjects[i].chunk.owner is Creature self && inconstorage.TryGetValue(self.abstractCreature, out _))
         {
             ActuallyKill(self);
-        }
-    }
-    #endregion
-
-    #region Hazer(willbemovedlater)
-    static void ILHazerUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCallvirt<Creature>("Die")
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(delegate (Creature creature)
-            {
-                TryAddKillFeedEntry(creature, "Incon");
-            });
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILHazerUpdate!");
         }
     }
     #endregion

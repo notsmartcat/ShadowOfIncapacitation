@@ -98,6 +98,13 @@ public class ShadowOfOptions : OptionInterface
         egg_den = config.Bind("egg_den", false, new ConfigurableInfo("If On Incapacitated Eggbugs will gain back their eggs when revived using the den. (The eggs will always spawn back on the EggBug if it Cheats Death outside of the player den) (Default = false)", null, "", new object[1] { "Den" }));
         #endregion
 
+        #region Hazer
+        hazy_state = config.Bind("hazy_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Hazer"));
+
+        hazy_spray = config.Bind("hazy_spray", false, new ConfigurableInfo("If On Hazers will not spray whenever they are either Unconscious or Incapacitated unless they are thrown. (Default = false)", null, "", new object[1] { "Spray" }));
+        hazy_swallow = config.Bind("hazy_swallow", false, new ConfigurableInfo("If On Unconscious and Incapacitated Hazers will be swallowed instead of eaten. (Default = false)", null, "", new object[1] { "Swallow" }));
+        #endregion
+
         #region Lizard
         liz_state = config.Bind("liz_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Lizard"));
 
@@ -316,6 +323,18 @@ public class ShadowOfOptions : OptionInterface
         DrawBox(ref Tabs[2]);
         #endregion
 
+        #region Hazer
+        AddNewLine(0.5f);
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[2], hazy_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(hazy_spray, (string)hazy_spray.info.Tags[0]);
+        //AddCheckBox(hazy_swallow, (string)hazy_swallow.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[2]);
+        DrawBox(ref Tabs[2]);
+        #endregion
+
         #region Lizard
         AddNewLine(0.5f);
         AddBox();
@@ -341,26 +360,26 @@ public class ShadowOfOptions : OptionInterface
         DrawCheckBoxes(ref Tabs[2]);
         DrawBox(ref Tabs[2]);
         #endregion
-
-        #region Slugcat
-        AddNewLine(0.5f);
-        AddBox();
-        AddNewLine();
-        DrawComboBox(ref Tabs[2], slug_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Den Revive" });
-        AddNewLine();
-        AddCheckBox(incon_slugplayer, (string)incon_slugplayer.info.Tags[0]);
-        AddCheckBox(incon_slugpup, (string)incon_slugpup.info.Tags[0]);
-        AddCheckBox(slugpup_never_die, (string)slugpup_never_die.info.Tags[0]);
-        DrawCheckBoxes(ref Tabs[2]);
-        DrawBox(ref Tabs[2]);
-        #endregion
         #endregion
 
         #region Base Game Creatures 3
         Tabs[3] = new OpTab(this, "Base Creatures 3");
         InitializeMarginAndPos();
 
+        #region Slugcat
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[3], slug_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Den Revive" });
+        AddNewLine();
+        AddCheckBox(incon_slugplayer, (string)incon_slugplayer.info.Tags[0]);
+        AddCheckBox(incon_slugpup, (string)incon_slugpup.info.Tags[0]);
+        AddCheckBox(slugpup_never_die, (string)slugpup_never_die.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[3]);
+        DrawBox(ref Tabs[3]);
+        #endregion
+
         #region Vulture
+        AddNewLine(0.5f);
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[3], vul_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death" });
@@ -1154,6 +1173,13 @@ public class ShadowOfOptions : OptionInterface
 
     public static Configurable<bool> egg_egg;
     public static Configurable<bool> egg_den;
+    #endregion
+
+    #region Hazer
+    public static Configurable<string> hazy_state;
+
+    public static Configurable<bool> hazy_spray;
+    public static Configurable<bool> hazy_swallow;
     #endregion
 
     #region Lizard
