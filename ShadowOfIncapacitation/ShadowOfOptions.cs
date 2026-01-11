@@ -111,6 +111,13 @@ public class ShadowOfOptions : OptionInterface
         jet_eat = config.Bind("jet_eat", false, new ConfigurableInfo("If On Incapacitated JetFish will grab and hold any valid edibles. (Default = false)", null, "", new object[1] { "Eat" }));
         #endregion
 
+        #region LanternMouse
+        mouse_state = config.Bind("mouse_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("LanternMouse"));
+
+        mouse_struggle = config.Bind("mouse_struggle", false, new ConfigurableInfo("If On Incapacitated LanternMice struggle while being held by the player. (Default = false)", null, "", new object[1] { "Struggle" }));
+        mouse_squeak = config.Bind("mouse_squeak", false, new ConfigurableInfo("If On Incapacitated LanternMice will Squeak. These sounds can be heard by other creatures in the game. (Default = false)", null, "", new object[1] { "Squeak" }));
+        #endregion
+
         #region Lizard
         liz_state = config.Bind("liz_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Lizard"));
 
@@ -352,27 +359,40 @@ public class ShadowOfOptions : OptionInterface
         DrawBox(ref Tabs[2]);
         #endregion
 
-        #region Lizard
+        #region LanternMouse
         AddNewLine(0.5f);
         AddBox();
         AddNewLine();
-        DrawComboBox(ref Tabs[2], liz_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        DrawComboBox(ref Tabs[2], mouse_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
         AddNewLine();
-        AddCheckBox(liz_attack, (string)liz_attack.info.Tags[0]);
-        AddCheckBox(liz_attack_move, (string)liz_attack_move.info.Tags[0]);
-        AddCheckBox(liz_voice, (string)liz_voice.info.Tags[0]);
-        AddCheckBox(liz_fear_move, (string)liz_fear_move.info.Tags[0]);
-        AddCheckBox(liz_friend, (string)liz_friend.info.Tags[0]);
+        AddCheckBox(mouse_struggle, (string)mouse_struggle.info.Tags[0]);
+        AddCheckBox(mouse_squeak, (string)mouse_squeak.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[2]);
         DrawBox(ref Tabs[2]);
         #endregion
+
         #endregion
 
         #region Base Game Creatures 3
         Tabs[3] = new OpTab(this, "Base Creatures 3");
         InitializeMarginAndPos();
 
+        #region Lizard
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[3], liz_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(liz_attack, (string)liz_attack.info.Tags[0]);
+        AddCheckBox(liz_attack_move, (string)liz_attack_move.info.Tags[0]);
+        AddCheckBox(liz_voice, (string)liz_voice.info.Tags[0]);
+        AddCheckBox(liz_fear_move, (string)liz_fear_move.info.Tags[0]);
+        AddCheckBox(liz_friend, (string)liz_friend.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[3]);
+        DrawBox(ref Tabs[3]);
+        #endregion
+
         #region Scavenger
+        AddNewLine(0.5f);
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[3], scav_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
@@ -1203,6 +1223,13 @@ public class ShadowOfOptions : OptionInterface
     public static Configurable<string> jet_state;
 
     public static Configurable<bool> jet_eat;
+    #endregion
+
+    #region LanternMouse
+    public static Configurable<string> mouse_state;
+
+    public static Configurable<bool> mouse_struggle;
+    public static Configurable<bool> mouse_squeak;
     #endregion
 
     #region Lizard
