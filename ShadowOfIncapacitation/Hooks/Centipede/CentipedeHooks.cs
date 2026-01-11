@@ -542,7 +542,7 @@ internal class Hooks
                 }
                 if (i > 0)
                 {
-                    sLeaser.sprites[self.SecondarySegmentSprite(i - 1)].scaleX = self.owner.bodyChunks[i].rad * Mathf.Lerp(0.9f, Mathf.Lerp(1.1f, 0.8f, Mathf.Abs(normalized.x)), num2) * 2f;
+                    sLeaser.sprites[self.SecondarySegmentSprite(i - 1)].scaleX = self.owner.bodyChunks[i].rad * Mathf.Lerp(0.9f, Mathf.Lerp(1.1f, 0.8f, Mathf.Abs(normalized.x)), num2) * 2f * MiscHooks.ApplyBreath(data, timeStacker);
                 }
             }
         }

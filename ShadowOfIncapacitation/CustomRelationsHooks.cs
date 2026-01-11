@@ -15,6 +15,8 @@ internal class CustomRelationsHooks
 
         On.EggBugAI.IUseARelationshipTracker_UpdateDynamicRelationship += EggBugAIUpdateDynamicRelationship;
 
+        On.JetFishAI.IUseARelationshipTracker_UpdateDynamicRelationship += JetFishAIUpdateDynamicRelationship;
+
         On.LizardAI.IUseARelationshipTracker_UpdateDynamicRelationship += LizardAIUpdateDynamicRelationship;
 
         On.ScavengerAI.IUseARelationshipTracker_UpdateDynamicRelationship += ScavengerAIUpdateDynamicRelationship;
@@ -45,6 +47,13 @@ internal class CustomRelationsHooks
 
     #region EggBug
     static Relationship EggBugAIUpdateDynamicRelationship(On.EggBugAI.orig_IUseARelationshipTracker_UpdateDynamicRelationship orig, EggBugAI self, DynamicRelationship dRelation)
+    {
+        return ReturnToDenFull(self, dRelation) ? new Relationship(Relationship.Type.Ignores, 0f) : orig(self, dRelation);
+    }
+    #endregion
+
+    #region JetFish
+    static Relationship JetFishAIUpdateDynamicRelationship(On.JetFishAI.orig_IUseARelationshipTracker_UpdateDynamicRelationship orig, JetFishAI self, DynamicRelationship dRelation)
     {
         return ReturnToDenFull(self, dRelation) ? new Relationship(Relationship.Type.Ignores, 0f) : orig(self, dRelation);
     }

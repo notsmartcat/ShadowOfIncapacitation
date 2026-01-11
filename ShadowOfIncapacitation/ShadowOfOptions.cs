@@ -105,6 +105,12 @@ public class ShadowOfOptions : OptionInterface
         hazy_swallow = config.Bind("hazy_swallow", false, new ConfigurableInfo("If On Unconscious and Incapacitated Hazers will be swallowed instead of eaten. (Default = false)", null, "", new object[1] { "Swallow" }));
         #endregion
 
+        #region JetFish
+        jet_state = config.Bind("jet_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("JetFish"));
+
+        jet_eat = config.Bind("jet_eat", false, new ConfigurableInfo("If On Incapacitated JetFish will grab and hold any valid edibles. (Default = false)", null, "", new object[1] { "Eat" }));
+        #endregion
+
         #region Lizard
         liz_state = config.Bind("liz_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Lizard"));
 
@@ -335,6 +341,17 @@ public class ShadowOfOptions : OptionInterface
         DrawBox(ref Tabs[2]);
         #endregion
 
+        #region JetFish
+        AddNewLine(0.5f);
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[2], jet_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(jet_eat, (string)jet_eat.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[2]);
+        DrawBox(ref Tabs[2]);
+        #endregion
+
         #region Lizard
         AddNewLine(0.5f);
         AddBox();
@@ -349,24 +366,24 @@ public class ShadowOfOptions : OptionInterface
         DrawCheckBoxes(ref Tabs[2]);
         DrawBox(ref Tabs[2]);
         #endregion
-
-        #region Scavenger
-        AddNewLine(0.5f);
-        AddBox();
-        AddNewLine();
-        DrawComboBox(ref Tabs[2], scav_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
-        AddNewLine();
-        AddCheckBox(scav_back_spear, (string)scav_back_spear.info.Tags[0]);
-        DrawCheckBoxes(ref Tabs[2]);
-        DrawBox(ref Tabs[2]);
-        #endregion
         #endregion
 
         #region Base Game Creatures 3
         Tabs[3] = new OpTab(this, "Base Creatures 3");
         InitializeMarginAndPos();
 
+        #region Scavenger
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[3], scav_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(scav_back_spear, (string)scav_back_spear.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[3]);
+        DrawBox(ref Tabs[3]);
+        #endregion
+
         #region Slugcat
+        AddNewLine(0.5f);
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[3], slug_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Den Revive" });
@@ -1180,6 +1197,12 @@ public class ShadowOfOptions : OptionInterface
 
     public static Configurable<bool> hazy_spray;
     public static Configurable<bool> hazy_swallow;
+    #endregion
+
+    #region JetFish
+    public static Configurable<string> jet_state;
+
+    public static Configurable<bool> jet_eat;
     #endregion
 
     #region Lizard

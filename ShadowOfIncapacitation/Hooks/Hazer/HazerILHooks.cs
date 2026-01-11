@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using System;
-using UnityEngine;
+
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation.HazerHooks;
