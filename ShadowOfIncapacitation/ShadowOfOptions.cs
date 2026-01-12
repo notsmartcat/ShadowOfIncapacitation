@@ -138,16 +138,17 @@ public class ShadowOfOptions : OptionInterface
         #endregion
 
         #region NeedleWorm
-        noodle_state = config.Bind("noodle_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("LanternMouse"));
+        noodle_state = config.Bind("noodle_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("NeedleWorm"));
 
-        noodle_scream = config.Bind("noodle_scream", false, new ConfigurableInfo("If On Incapacitated LanternMice struggle while being held by the player. (Default = false)", null, "", new object[1] { "Struggle" }));
-        noodle_rescue = config.Bind("noodle_rescue", false, new ConfigurableInfo("If On Incapacitated LanternMice will Squeak. These sounds can be heard by other creatures in the game. (Default = false)", null, "", new object[1] { "Squeak" }));
+        noodle_scream = config.Bind("noodle_scream", false, new ConfigurableInfo("If On Incapacitated NeedleWorm will make sounds. These sounds can be heard by other creatures in the game. (Default = false)", null, "", new object[1] { "Voice" }));
+        noodle_rescue = config.Bind("noodle_rescue", false, new ConfigurableInfo("If On BigNeedleWorm will attempt to pick up and bring Incapacitated or Unconscious SmallNeedleWorms back to their den. (Default = false)", null, "", new object[1] { "Rescue" }));
         #endregion
 
         #region Scavenger
         scav_state = config.Bind("scav_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Scavenger"));
 
         scav_back_spear = config.Bind("scav_back_spear", false, new ConfigurableInfo("If On Scavengers will not drop any items that are attached to them (such as back-spears) when they are Incapacitated or Unconscious. (Default = false)", null, "", new object[1] { "Drop Items" }));
+        scav_rescue = config.Bind("scav_rescue", false, new ConfigurableInfo("If On Scavengers will attempt to pick up and bring Incapacitated or Unconscious Scavengers back to their den. (This feature technically works but has severe issues, use at your own risk) (Default = false)", null, "", new object[1] { "Rescue (Broken)" }));
         #endregion
 
         #region SlugPup
@@ -257,7 +258,7 @@ public class ShadowOfOptions : OptionInterface
         #endregion
 
         #region Base Game Creatures 1
-        Tabs[1] = new OpTab(this, " Base Creatures 1");
+        Tabs[1] = new OpTab(this, " Creatures 1");
         InitializeMarginAndPos();
 
         #region Batfly
@@ -323,7 +324,7 @@ public class ShadowOfOptions : OptionInterface
         #endregion
 
         #region Base Game Creatures 2
-        Tabs[2] = new OpTab(this, "Base Creatures 2");
+        Tabs[2] = new OpTab(this, "Creatures 2");
         InitializeMarginAndPos();
 
         #region DropBug
@@ -386,7 +387,7 @@ public class ShadowOfOptions : OptionInterface
         #endregion
 
         #region Base Game Creatures 3
-        Tabs[3] = new OpTab(this, "Base Creatures 3");
+        Tabs[3] = new OpTab(this, "Creatures 3");
         InitializeMarginAndPos();
 
         #region Lizard
@@ -430,6 +431,7 @@ public class ShadowOfOptions : OptionInterface
         DrawComboBox(ref Tabs[3], scav_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
         AddNewLine();
         AddCheckBox(scav_back_spear, (string)scav_back_spear.info.Tags[0]);
+        AddCheckBox(scav_rescue, (string)scav_rescue.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[3]);
         DrawBox(ref Tabs[3]);
         #endregion
@@ -446,26 +448,26 @@ public class ShadowOfOptions : OptionInterface
         DrawCheckBoxes(ref Tabs[3]);
         DrawBox(ref Tabs[3]);
         #endregion
+        #endregion
+
+        #region Downpour Creatures 1
+        Tabs[4] = new OpTab(this, "Creatures 4");
+        InitializeMarginAndPos();
 
         #region Vulture
-        AddNewLine(0.5f);
         AddBox();
         AddNewLine();
-        DrawComboBox(ref Tabs[3], vul_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death" });
+        DrawComboBox(ref Tabs[4], vul_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death" });
         AddNewLine();
         AddCheckBox(vul_attack, (string)vul_attack.info.Tags[0]);
         AddCheckBox(vul_attack_move, (string)vul_attack_move.info.Tags[0]);
         AddCheckBox(vul_grab, (string)vul_grab.info.Tags[0]);
-        DrawCheckBoxes(ref Tabs[3]);
-        DrawBox(ref Tabs[3]);
+        DrawCheckBoxes(ref Tabs[4]);
+        DrawBox(ref Tabs[4]);
         #endregion
-        #endregion
-
-        #region Downpour Creatures 1
-        Tabs[4] = new OpTab(this, "Downpour Creatures 1");
-        InitializeMarginAndPos();
 
         #region FireBug
+        AddNewLine(0.5f);
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[4], fire_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
@@ -1294,6 +1296,7 @@ public class ShadowOfOptions : OptionInterface
     public static Configurable<string> scav_state;
 
     public static Configurable<bool> scav_back_spear;
+    public static Configurable<bool> scav_rescue;
     #endregion
 
     #region SlugNPC

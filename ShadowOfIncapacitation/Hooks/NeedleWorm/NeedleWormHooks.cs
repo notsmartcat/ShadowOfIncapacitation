@@ -185,18 +185,6 @@ internal class Hooks
 
         try
         {
-            if (data.rescueCandidate == null || (data.rescueCandidate as SmallNeedleWorm).grasps[0] == null || (data.rescueCandidate as SmallNeedleWorm).grasps[0].grabbedChunk.owner != self.worm)
-            {
-                if (data.stunTimer > 0)
-                {
-                    data.stunTimer -= 1;
-                }
-                if (data.stunCountdown > 0)
-                {
-                    data.stunCountdown -= 1;
-                }
-            }
-
             if (UnityEngine.Random.value < 0.0125f && (self.behavior == null || self.behavior == NeedleWormAI.Behavior.Idle))
             {
                 if (data.rescueCandidate == null)
@@ -217,19 +205,14 @@ internal class Hooks
 
                 if (data.rescueCandidate != null)
                 {
-                    InconAct();
-
                     self.behavior = NoodleRescueIncon;
                 }
             }
 
             if (self.behavior == NoodleRescueIncon)
             {
-                if (data.rescueCandidate == null || !ValidNeedlCheck(data.rescueCandidate as SmallNeedleWorm) || data.stunTimer <= 0 && ((data.rescueCandidate as SmallNeedleWorm).grasps[0] == null || (data.rescueCandidate as SmallNeedleWorm).grasps[0].grabbedChunk.owner != self.worm))
+                if (data.rescueCandidate == null || !ValidNeedlCheck(data.rescueCandidate as SmallNeedleWorm) && ((data.rescueCandidate as SmallNeedleWorm).grasps[0] == null || (data.rescueCandidate as SmallNeedleWorm).grasps[0].grabbedChunk.owner != self.worm))
                 {
-                    data.stunTimer = 0;
-                    data.stunCountdown = 0;
-
                     data.rescueCandidate = null;
                     self.behavior = NeedleWormAI.Behavior.Idle;
                     return;
@@ -284,18 +267,6 @@ internal class Hooks
             }
 
             return true;
-        }
-
-        void InconAct()
-        {
-            if (data.stunCountdown > 0)
-            {
-                return;
-            }
-
-            data.stunTimer = UnityEngine.Random.Range(180, 241);
-
-            data.stunCountdown = data.stunTimer + UnityEngine.Random.Range(10, 41);
         }
         #endregion
     }

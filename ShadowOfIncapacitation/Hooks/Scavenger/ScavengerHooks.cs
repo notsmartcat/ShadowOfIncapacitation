@@ -1,6 +1,7 @@
 ﻿using MonoMod.RuntimeDetour;
 using RWCustom;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 using static Incapacitation.Incapacitation;
@@ -14,7 +15,9 @@ internal class Hooks
         On.Scavenger.Collide += ScavengerCollide;
         On.Scavenger.Update += ScavengerUpdate;
 
+        On.ScavengerAI.DecideBehavior += ScavengerAIDecideBehavior;
         On.ScavengerAI.Update += ScavengerAIUpdate;
+        On.ScavengerAI.UpdateCurrentViolenceType += ScavengerAIUpdateCurrentViolenceType;
         On.ScavengerAI.WantToStayInDenUntilEndOfCycle += ScavengerAIWantToStayInDenUntilEndOfCycle;
 
         On.ScavengerGraphics.DrawSprites += ScavengerGraphicsDrawSprites;
@@ -406,11 +409,111 @@ internal class Hooks
     #endregion
 
     #region ScavengerAI
+    static void ScavengerAIDecideBehavior(On.ScavengerAI.orig_DecideBehavior orig, ScavengerAI self)
+    {
+        bool wasRescuing = self.behavior == ScavRescueIncon;
+
+        orig(self);
+
+        if (inconstorage.TryGetValue(self.scavenger.abstractCreature, out InconData data) && data.rescueCandidate != null && wasRescuing && (self.behavior == ScavengerAI.Behavior.Idle || self.behavior == ScavengerAI.Behavior.Scavange || self.behavior == ScavengerAI.Behavior.Travel))
+        {
+            self.behavior = ScavRescueIncon;
+        }
+    }
     static void ScavengerAIUpdate(On.ScavengerAI.orig_Update orig, ScavengerAI self)
     {
         orig(self);
 
         MiscHooks.ReturnToDenUpdate(self);
+
+        if (!ShadowOfOptions.scav_rescue.Value || !inconstorage.TryGetValue(self.scavenger.abstractCreature, out InconData data))
+        {
+            return;
+        }
+
+        try
+        {
+            if (UnityEngine.Random.value < 0.0125f && !self.scavenger.King && (self.behavior == null || self.behavior == ScavengerAI.Behavior.Idle || self.behavior == ScavengerAI.Behavior.Investigate || self.behavior == ScavengerAI.Behavior.Travel || self.behavior == ScavengerAI.Behavior.Scavange))
+            {
+                if (data.rescueCandidate == null)
+                {
+                    List<AbstractCreature> list = new(self.scavenger.abstractCreature.Room.creatures);
+                    foreach (AbstractCreature creature in list)
+                    {
+                        if (creature.realizedCreature == null || creature.realizedCreature is not Scavenger scav || !ValidNeedlCheck(scav))
+                        {
+                            continue;
+                        }
+                        data.rescueCandidate = creature.realizedCreature;
+
+                        break;
+                    }
+                }
+
+                if (data.rescueCandidate != null)
+                {
+                    self.behavior = ScavRescueIncon;
+                }
+            }
+
+            if (self.behavior == ScavRescueIncon)
+            {
+                if (data.rescueCandidate == null || !ValidNeedlCheck(data.rescueCandidate as Scavenger))
+                {
+                    data.rescueCandidate = null;
+                    self.behavior = ScavengerAI.Behavior.Idle;
+                    return;
+                }
+
+                Scavenger scav = data.rescueCandidate as Scavenger;
+
+                if (Custom.DistLess(scav.mainBodyChunk.pos, self.scavenger.mainBodyChunk.pos, 40f))
+                {
+                    self.scavenger.Grab(scav, 0, 0, Creature.Grasp.Shareability.CanNotShare, 10f, false, false);
+                }
+
+                if (self.scavenger.grasps[0] == null || self.scavenger.grasps[0].grabbed != scav)
+                {
+                    self.creature.abstractAI.SetDestination(scav.coord);
+                }
+                else if (self.scavenger.grasps[0] != null && self.scavenger.grasps[0].grabbed == scav)
+                {
+                    if (self.denFinder.GetDenPosition() != null)
+                    {
+                        self.creature.abstractAI.SetDestination(self.denFinder.GetDenPosition().Value);
+
+                        if (self.scavenger.enteringShortCut.HasValue && self.scavenger.room != null && self.scavenger.room.shortcutData(self.scavenger.enteringShortCut.Value).shortCutType != null && self.scavenger.room.shortcutData(self.scavenger.enteringShortCut.Value).shortCutType == ShortcutData.Type.CreatureHole)
+                        {
+                            scav.enteringShortCut = self.scavenger.enteringShortCut;
+                            self.scavenger.LoseAllGrasps();
+
+                            data.rescueCandidate = null;
+                            self.behavior = ScavengerAI.Behavior.Idle;
+                            self.creature.abstractAI.SetDestination(self.scavenger.abstractCreature.pos);
+                        }
+                    }
+                }
+            }
+            else if (data.rescueCandidate != null)
+            {
+                data.rescueCandidate = null;
+            }
+        }
+        catch (Exception e) { Incapacitation.Logger.LogError(e); }
+
+        #region Local
+        bool ValidNeedlCheck(Scavenger scav)
+        {
+            return scav.dead && !scav.King && (scav.grabbedBy.Count == 0 || self.scavenger.grasps[0].grabbed == scav);
+        }
+        #endregion
+    }
+    static void ScavengerAIUpdateCurrentViolenceType(On.ScavengerAI.orig_UpdateCurrentViolenceType orig, ScavengerAI self)
+    {
+        if (!inconstorage.TryGetValue(self.scavenger.abstractCreature, out InconData data) || data.rescueCandidate == null)
+        {
+            orig(self);
+        }
     }
     static bool ScavengerAIWantToStayInDenUntilEndOfCycle(On.ScavengerAI.orig_WantToStayInDenUntilEndOfCycle orig, ScavengerAI self)
     {
