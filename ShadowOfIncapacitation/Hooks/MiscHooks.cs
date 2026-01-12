@@ -490,17 +490,17 @@ internal class MiscHooks
 
         bool Head()
         {
-            if (self is Vulture)
+            if (self is Centipede)
+            {
+                return hitChunk.index == 0 || hitChunk.index == self.bodyChunks.Length - 1;
+            }
+            else if (self is MirosBird || self is Vulture)
             {
                 return hitChunk.index == 4;
             }
             else if (self is Scavenger)
             {
                 return hitChunk.index == 2;
-            }
-            else if (self is Centipede)
-            {
-                return hitChunk.index == 0 || hitChunk.index == self.bodyChunks.Length - 1;
             }
 
             return hitChunk.index == 0;

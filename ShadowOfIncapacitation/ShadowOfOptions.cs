@@ -133,12 +133,8 @@ public class ShadowOfOptions : OptionInterface
         liz_friend = config.Bind("liz_friend", false, new ConfigurableInfo("If this and 'Den Revive' are On Lizards that have been Revived by the players den will always be tamed. (Default = false)", null, "", new object[1] { "Den Tame" }));
         #endregion
 
-        #region Vulture
-        vul_state = config.Bind("vul_state", "Incapacitation and Cheating Death", new ConfigurableInfo("Vulture"));
-
-        vul_attack = config.Bind("vul_attack", false, new ConfigurableInfo("If On Incapacitated Vultures will attempt to bite prey near them. The bites will never actually damage anything (Default = false)", null, "", new object[1] { "Attempt Bite" }));
-        vul_attack_move = config.Bind("vul_attack_move", false, new ConfigurableInfo("If On and Vulture Attempt Bite is On Incapacitated Vultures will slightly move themselves forward during bites, this will move the Vulture. (Default = false)", null, "", new object[1] { "Lunge" }));
-        vul_grab = config.Bind("vul_grab", false, new ConfigurableInfo("If On Incapacitated Vultures will will be capable of grabbing walls and ceilings with their tentacles(wings), this will move the Vulture. (Default = false)", null, "", new object[1] { "Grab" }));
+        #region MirosBird
+        miro_state = config.Bind("miro_state", "Incapacitation and Cheating Death", new ConfigurableInfo("MirosBird"));
         #endregion
 
         #region SlugPup
@@ -154,6 +150,15 @@ public class ShadowOfOptions : OptionInterface
 
         scav_back_spear = config.Bind("scav_back_spear", false, new ConfigurableInfo("If On Scavengers will not drop any items that are attached to them (such as back-spears) when they are Incapacitated or Unconscious. (Default = false)", null, "", new object[1] { "Drop Items" }));
         #endregion
+
+        #region Vulture
+        vul_state = config.Bind("vul_state", "Incapacitation and Cheating Death", new ConfigurableInfo("Vulture"));
+
+        vul_attack = config.Bind("vul_attack", false, new ConfigurableInfo("If On Incapacitated Vultures will attempt to bite prey near them. The bites will never actually damage anything (Default = false)", null, "", new object[1] { "Attempt Bite" }));
+        vul_attack_move = config.Bind("vul_attack_move", false, new ConfigurableInfo("If On and Vulture Attempt Bite is On Incapacitated Vultures will slightly move themselves forward during bites, this will move the Vulture. (Default = false)", null, "", new object[1] { "Lunge" }));
+        vul_grab = config.Bind("vul_grab", false, new ConfigurableInfo("If On Incapacitated Vultures will will be capable of grabbing walls and ceilings with their tentacles(wings), this will move the Vulture. (Default = false)", null, "", new object[1] { "Grab" }));
+        #endregion
+
         #endregion
 
         #region Downpour
@@ -388,6 +393,14 @@ public class ShadowOfOptions : OptionInterface
         AddCheckBox(liz_fear_move, (string)liz_fear_move.info.Tags[0]);
         AddCheckBox(liz_friend, (string)liz_friend.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[3]);
+        DrawBox(ref Tabs[3]);
+        #endregion
+
+        #region MirosBird
+        AddNewLine(0.5f);
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[3], miro_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death" });
         DrawBox(ref Tabs[3]);
         #endregion
 
@@ -1247,12 +1260,8 @@ public class ShadowOfOptions : OptionInterface
     public static Configurable<bool> liz_friend;
     #endregion
 
-    #region Vulture
-    public static Configurable<string> vul_state;
-
-    public static Configurable<bool> vul_attack;
-    public static Configurable<bool> vul_attack_move;
-    public static Configurable<bool> vul_grab;
+    #region MirosBird
+    public static Configurable<string> miro_state;
     #endregion
 
     #region SlugNPC
@@ -1263,10 +1272,18 @@ public class ShadowOfOptions : OptionInterface
     public static Configurable<bool> slugpup_never_die;
     #endregion
 
-    #region Scav
+    #region Scavenger
     public static Configurable<string> scav_state;
 
     public static Configurable<bool> scav_back_spear;
+    #endregion
+
+    #region Vulture
+    public static Configurable<string> vul_state;
+
+    public static Configurable<bool> vul_attack;
+    public static Configurable<bool> vul_attack_move;
+    public static Configurable<bool> vul_grab;
     #endregion
     #endregion
 

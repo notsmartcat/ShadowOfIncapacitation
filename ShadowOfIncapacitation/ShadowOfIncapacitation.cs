@@ -115,6 +115,9 @@ public class Incapacitation : BaseUnityPlugin
             LizardHooks.Hooks.Apply();
             LizardHooks.ILHooks.Apply();
 
+            MirosBirdHooks.Hooks.Apply();
+            MirosBirdHooks.ILHooks.Apply();
+
             //NeedleWormHooks.Hooks.Apply();
             //NeedleWormHooks.ILHooks.Apply();
 
@@ -368,6 +371,7 @@ public class Incapacitation : BaseUnityPlugin
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.JetFish && ShadowOfOptions.jet_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LanternMouse && ShadowOfOptions.mouse_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LizardTemplate && ShadowOfOptions.liz_state.Value != "Disabled" ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.MirosBird && ShadowOfOptions.miro_state.Value != "Disabled" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && ShadowOfOptions.scav_state.Value != "Disabled" ||
             (self.creatureTemplate.type == CreatureTemplate.Type.Slugcat || ModManager.MSC && self.creatureTemplate.type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC) && ShadowOfOptions.slug_state.Value != "Disabled" || 
             (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Disabled" ||
@@ -416,6 +420,7 @@ public class Incapacitation : BaseUnityPlugin
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.JetFish && ShadowOfOptions.jet_state.Value != "Disabled" && ShadowOfOptions.jet_state.Value != "Incapacitation Only" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LanternMouse && ShadowOfOptions.mouse_state.Value != "Disabled" && ShadowOfOptions.mouse_state.Value != "Incapacitation Only" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LizardTemplate && ShadowOfOptions.liz_state.Value != "Disabled" && ShadowOfOptions.liz_state.Value != "Incapacitation Only" ||
+            self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.MirosBird && ShadowOfOptions.miro_state.Value != "Incapacitation and Cheating Death" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && (!ModManager.MSC || self.creatureTemplate.type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.ScavengerKing) && ShadowOfOptions.scav_state.Value != "Disabled" && ShadowOfOptions.scav_state.Value != "Incapacitation Only" ||
             (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Incapacitation and Cheating Death" ||
             (ModManager.MSC && (

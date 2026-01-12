@@ -1,7 +1,5 @@
-﻿using MonoMod.RuntimeDetour;
-using RWCustom;
+﻿using RWCustom;
 using System;
-using System.Drawing;
 using UnityEngine;
 
 using static Incapacitation.Incapacitation;
