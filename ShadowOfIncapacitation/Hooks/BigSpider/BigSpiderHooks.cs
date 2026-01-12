@@ -55,7 +55,7 @@ internal class Hooks
 
                     if (self.safariControlled || UnityEngine.Random.value < Custom.LerpMap(otherObject.TotalMass, 0.84f, self.spitter ? 5.5f : 3f, 0.5f, 0.15f, 0.12f) || !consious)
                     {
-                        if (self.Grab(otherObject, 0, otherChunk, Creature.Grasp.Shareability.CanNotShare, 0.5f, false, true))
+                        if (self.Grab(otherObject, 0, otherChunk, Creature.Grasp.Shareability.CanNotShare, 0.5f, false, false))
                         {
                             flag = true;
                             self.room.PlaySound(SoundID.Big_Spider_Grab_Creature, self.mainBodyChunk);

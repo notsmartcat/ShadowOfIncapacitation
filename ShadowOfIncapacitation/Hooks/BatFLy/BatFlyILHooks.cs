@@ -216,7 +216,7 @@ internal class ILHooks
 
     public static bool FlyAIUpdate(Fly self)
     {
-        return self.AI.behavior == RescueIncon;
+        return self.AI.behavior == FlyRescueIncon;
     }
     #endregion
 

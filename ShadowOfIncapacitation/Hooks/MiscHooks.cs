@@ -357,6 +357,10 @@ internal class MiscHooks
                         {
                             data.forceTame = true;
                         }
+                        else if (self.creature.creatureTemplate.type == CreatureTemplate.Type.SmallNeedleWorm)
+                        {
+                            self.Die();
+                        }
                     }
                 }
 

@@ -6,7 +6,7 @@
     <RWDir>$(HOME)/.local/share/Steam/steamapps/common/Rain World/</RWDir>
   </PropertyGroup>
   <PropertyGroup>
-    <LangVersion>11.0</LangVersion>
+    <LangVersion>preview</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <BaseOutputPath></BaseOutputPath>
   </PropertyGroup>

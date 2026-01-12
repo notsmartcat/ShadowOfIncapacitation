@@ -137,18 +137,25 @@ public class ShadowOfOptions : OptionInterface
         miro_state = config.Bind("miro_state", "Incapacitation and Cheating Death", new ConfigurableInfo("MirosBird"));
         #endregion
 
-        #region SlugPup
-        slug_state = config.Bind("slug_state", "Incapacitation and Den Revive", new ConfigurableInfo("Slugcat"));
+        #region NeedleWorm
+        noodle_state = config.Bind("noodle_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("LanternMouse"));
 
-        incon_slugplayer = config.Bind("incon_slugplayer", true, new ConfigurableInfo("If On Slugcats (Players) will be affected by the Incapacitation if it is Enabled for Slugcats. Cheating Death is disabled no matter what. Incapacitated Players cannot move or do anything. (Default = true)", null, "", new object[1] { "SlugCat" }));
-        incon_slugpup = config.Bind("incon_slugpup", true, new ConfigurableInfo("If On SlugPups will be affected by the Incapacitation and Cheating Death depending on if they are Enabled for Slugcats. (Default = true)", null, "", new object[1] { "SlugPup" }));
-        slugpup_never_die = config.Bind("slugpup_never_die", false, new ConfigurableInfo("If On SlugPups will always be incapacitated and will not die in this state. Bringing the SlugPup into the den and hibernating will revive it. (Default = false)", null, "", new object[1] { "SlugPup Never Die" }));
+        noodle_scream = config.Bind("noodle_scream", false, new ConfigurableInfo("If On Incapacitated LanternMice struggle while being held by the player. (Default = false)", null, "", new object[1] { "Struggle" }));
+        noodle_rescue = config.Bind("noodle_rescue", false, new ConfigurableInfo("If On Incapacitated LanternMice will Squeak. These sounds can be heard by other creatures in the game. (Default = false)", null, "", new object[1] { "Squeak" }));
         #endregion
 
         #region Scavenger
         scav_state = config.Bind("scav_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Scavenger"));
 
         scav_back_spear = config.Bind("scav_back_spear", false, new ConfigurableInfo("If On Scavengers will not drop any items that are attached to them (such as back-spears) when they are Incapacitated or Unconscious. (Default = false)", null, "", new object[1] { "Drop Items" }));
+        #endregion
+
+        #region SlugPup
+        slug_state = config.Bind("slug_state", "Incapacitation and Den Revive", new ConfigurableInfo("Slugcat"));
+
+        incon_slugplayer = config.Bind("incon_slugplayer", true, new ConfigurableInfo("If On Slugcats (Players) will be affected by the Incapacitation if it is Enabled for Slugcats. Cheating Death is disabled no matter what. Incapacitated Players cannot move or do anything. (Default = true)", null, "", new object[1] { "SlugCat" }));
+        incon_slugpup = config.Bind("incon_slugpup", true, new ConfigurableInfo("If On SlugPups will be affected by the Incapacitation and Cheating Death depending on if they are Enabled for Slugcats. (Default = true)", null, "", new object[1] { "SlugPup" }));
+        slugpup_never_die = config.Bind("slugpup_never_die", false, new ConfigurableInfo("If On SlugPups will always be incapacitated and will not die in this state. Bringing the SlugPup into the den and hibernating will revive it. (Default = false)", null, "", new object[1] { "SlugPup Never Die" }));
         #endregion
 
         #region Vulture
@@ -401,6 +408,18 @@ public class ShadowOfOptions : OptionInterface
         AddBox();
         AddNewLine();
         DrawComboBox(ref Tabs[3], miro_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death" });
+        DrawBox(ref Tabs[3]);
+        #endregion
+
+        #region NeedleWorm
+        AddNewLine(0.5f);
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[3], noodle_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(noodle_scream, (string)noodle_scream.info.Tags[0]);
+        AddCheckBox(noodle_rescue, (string)noodle_rescue.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[3]);
         DrawBox(ref Tabs[3]);
         #endregion
 
@@ -1264,18 +1283,25 @@ public class ShadowOfOptions : OptionInterface
     public static Configurable<string> miro_state;
     #endregion
 
-    #region SlugNPC
-    public static Configurable<string> slug_state;
-    public static Configurable<bool> incon_slugplayer;
-    public static Configurable<bool> incon_slugpup;
+    #region LanternMouse
+    public static Configurable<string> noodle_state;
 
-    public static Configurable<bool> slugpup_never_die;
+    public static Configurable<bool> noodle_scream;
+    public static Configurable<bool> noodle_rescue;
     #endregion
 
     #region Scavenger
     public static Configurable<string> scav_state;
 
     public static Configurable<bool> scav_back_spear;
+    #endregion
+
+    #region SlugNPC
+    public static Configurable<string> slug_state;
+    public static Configurable<bool> incon_slugplayer;
+    public static Configurable<bool> incon_slugpup;
+
+    public static Configurable<bool> slugpup_never_die;
     #endregion
 
     #region Vulture

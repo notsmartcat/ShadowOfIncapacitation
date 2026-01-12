@@ -219,7 +219,6 @@ internal class Hooks
                 {
                     data.stunCountdown -= 1;
                 }
-
             }
 
             if (UnityEngine.Random.value < 0.005f && (self.behavior == null || self.behavior == FlyAI.Behavior.Idle || self.behavior == FlyAI.Behavior.Chain || self.behavior == FlyAI.Behavior.Swarm))
@@ -244,11 +243,11 @@ internal class Hooks
                 {
                     InconAct();
 
-                    self.ChangeBehavior(RescueIncon);
+                    self.ChangeBehavior(FlyRescueIncon);
                 }
             }
 
-            if (self.behavior == RescueIncon)
+            if (self.behavior == FlyRescueIncon)
             {
                 if (data.rescueCandidate == null || !ValidFLyCheck(data.rescueCandidate as Fly) || data.stunTimer <= 0 && ((data.rescueCandidate as Fly).grasps[0] == null || (data.rescueCandidate as Fly).grasps[0].grabbedChunk.owner != self.fly))
                 {
@@ -332,7 +331,11 @@ internal class Hooks
         #region Local
         bool ValidFLyCheck(Fly fly)
         {
-            bool impaled = false;
+            if (!fly.dead || fly.grabbedBy.Count != 0 || (fly.grasps[0] != null && fly.grasps[0].grabbedChunk.owner != self.fly) || self.room.PointSubmerged(fly.firstChunk.pos, -40f) || fly.firstChunk.pos.y <= self.room.FloatWaterLevel(fly.firstChunk.pos) + 40f)
+            {
+                return false;
+            }
+
             List<PhysicalObject>[] list = self.fly.abstractCreature.Room.realizedRoom.physicalObjects;
 
             foreach (PhysicalObject obj in list[2])
@@ -346,16 +349,12 @@ internal class Hooks
                 {
                     if (stick.B == fly.abstractCreature)
                     {
-                        impaled = true;
-                        break;
+                        return false;
                     }
                 }
-
-                if (impaled)
-                    break;
             }
 
-            return fly.dead && fly.grabbedBy.Count == 0 && !impaled && (fly.grasps[0] == null || fly.grasps[0].grabbedChunk.owner == self.fly) && !self.room.PointSubmerged(fly.firstChunk.pos, -40f) && fly.firstChunk.pos.y > self.room.FloatWaterLevel(fly.firstChunk.pos) + 40f;
+            return true;
         }
 
         void InconAct()

@@ -19,6 +19,9 @@ internal class CustomRelationsHooks
 
         On.MouseAI.IUseARelationshipTracker_UpdateDynamicRelationship += MouseAIUpdateDynamicRelationship;
 
+        On.BigNeedleWormAI.IUseARelationshipTracker_UpdateDynamicRelationship += BigNeedleWormAIUpdateDynamicRelationship;
+        On.SmallNeedleWormAI.IUseARelationshipTracker_UpdateDynamicRelationship += SmallNeedleWormAIUpdateDynamicRelationship;
+
         On.LizardAI.IUseARelationshipTracker_UpdateDynamicRelationship += LizardAIUpdateDynamicRelationship;
 
         On.ScavengerAI.IUseARelationshipTracker_UpdateDynamicRelationship += ScavengerAIUpdateDynamicRelationship;
@@ -63,6 +66,17 @@ internal class CustomRelationsHooks
 
     #region LanternMouse
     static Relationship MouseAIUpdateDynamicRelationship(On.MouseAI.orig_IUseARelationshipTracker_UpdateDynamicRelationship orig, MouseAI self, DynamicRelationship dRelation)
+    {
+        return ReturnToDenFull(self, dRelation) ? new Relationship(Relationship.Type.Ignores, 0f) : orig(self, dRelation);
+    }
+    #endregion
+
+    #region NeedleWorm
+    static Relationship BigNeedleWormAIUpdateDynamicRelationship(On.BigNeedleWormAI.orig_IUseARelationshipTracker_UpdateDynamicRelationship orig, BigNeedleWormAI self, DynamicRelationship dRelation)
+    {
+        return ReturnToDenFull(self, dRelation) ? new Relationship(Relationship.Type.Ignores, 0f) : orig(self, dRelation);
+    }
+    static Relationship SmallNeedleWormAIUpdateDynamicRelationship(On.SmallNeedleWormAI.orig_IUseARelationshipTracker_UpdateDynamicRelationship orig, SmallNeedleWormAI self, DynamicRelationship dRelation)
     {
         return ReturnToDenFull(self, dRelation) ? new Relationship(Relationship.Type.Ignores, 0f) : orig(self, dRelation);
     }

@@ -20,31 +20,13 @@ internal class ILHooks
         ILLabel target = null;
 
         #region limp
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[1]
+        if (val.TryGotoNext(MoveType.After, new Func<Instruction, bool>[1]
         {
-            x => x.MatchLdcI4(0),
+            x => x.MatchStfld<Tentacle>("limp"),
         }))
         {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILMirosBirdUpdateNeck limp Target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<Creature>("get_Consious"),
-        }))
-        {
-            val.MoveAfterLabels();
-
             val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(IsIncon);
-            val.Emit(OpCodes.Brtrue_S, target); ;
+            val.EmitDelegate(MirosBirdUpdateNeck);
         }
         else
         {
@@ -80,6 +62,11 @@ internal class ILHooks
             Incapacitation.Logger.LogInfo(all + "Could not find match ILMirosBirdUpdateNeck retractFac!");
         }
         #endregion
+    }
+
+    public static void MirosBirdUpdateNeck(MirosBird self)
+    {
+        self.neck.limp = !IsIncon(self) && !self.Consious;
     }
     #endregion
 }

@@ -71,7 +71,7 @@ internal class Hooks
         {
             if (ShadowOfOptions.jet_eat.Value)
             {
-                self.Grab(otherObject, 0, otherChunk, Creature.Grasp.Shareability.CanNotShare, 1f, true, true);
+                self.Grab(otherObject, 0, otherChunk, Creature.Grasp.Shareability.CanNotShare, 1f, true, false);
                 self.room.PlaySound(SoundID.Jet_Fish_Grab_NPC, self.mainBodyChunk);
             }
         }
@@ -108,7 +108,7 @@ internal class Hooks
 
         if (ShadowOfOptions.jet_eat.Value && myChunk == 0 && self.grasps[0] == null && otherObject is Creature && ((otherObject as Creature).dead || otherObject.TotalMass < self.TotalMass * 0.7f) && self.Template.CreatureRelationship((otherObject as Creature).Template).type == CreatureTemplate.Relationship.Type.Eats)
         {
-            self.Grab(otherObject, 0, otherChunk, Creature.Grasp.Shareability.CanNotShare, 1f, true, true);
+            self.Grab(otherObject, 0, otherChunk, Creature.Grasp.Shareability.CanNotShare, 1f, true, false);
             self.room.PlaySound((otherObject is Player) ? SoundID.Jet_Fish_Grab_Player : SoundID.Jet_Fish_Grab_NPC, self.mainBodyChunk);
         }
     }
