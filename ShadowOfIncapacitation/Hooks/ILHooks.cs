@@ -44,20 +44,16 @@ internal class ILHooksMisc
 
         IL.Watcher.ARZapper.ZapperContact += ILARZapperZapperContact;
 
-        IL.Watcher.Barnacle.BitByPlayer += ILBarnacleBitByPlayer;
+        //IL.Watcher.Barnacle.BitByPlayer += ILBarnacleBitByPlayer;
 
-        IL.Watcher.BigMoth.Update += ILBigMothUpdate;
-
-        IL.Watcher.BigSkyWhale.Update += ILBigSkyWhaleUpdate;
-
-        IL.Watcher.Rat.BitByPlayer += ILRatBitByPlayer;
+        //IL.Watcher.BigSkyWhale.Update += ILBigSkyWhaleUpdate;
 
         IL.Watcher.SandGrub.Bury += ILSandGrubBury;
-        IL.Watcher.SandGrub.PullFromBurrow += ILSandGrubPullFromBurrow;
+        //IL.Watcher.SandGrub.PullFromBurrow += ILSandGrubPullFromBurrow;
 
         IL.Watcher.Sandstorm.AffectObjects += ILSandstormAffectObjects;
 
-        IL.Watcher.Tardigrade.BitByPlayer += ILTardigradeBitByPlayer;
+        //IL.Watcher.Tardigrade.BitByPlayer += ILTardigradeBitByPlayer;
     }
 
     #region Base Game
@@ -970,27 +966,6 @@ internal class ILHooksMisc
     }
     #endregion
 
-    #region BigMoth(willbemovedlater)
-    static void ILBigMothUpdate(ILContext il)
-    {
-        ILCursor val = new(il);
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchLdloc(3),
-            x => x.MatchCallvirt<Creature>("Die")
-        }))
-        {
-            val.Emit(OpCodes.Ldloc_3);
-            val.EmitDelegate(ActuallyKill);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILBigMothUpdate!");
-        }
-    }
-    #endregion
-
     #region BigSkyWhale
     static void ILBigSkyWhaleUpdate(ILContext il)
     {
@@ -1008,44 +983,6 @@ internal class ILHooksMisc
         else
         {
             Incapacitation.Logger.LogInfo(all + "Could not find match ILBigSkyWhaleUpdate!");
-        }
-    }
-    #endregion
-
-    #region Rat(willbemovedlater)
-    static void ILRatBitByPlayer(ILContext il)
-    {
-        ILCursor val = new(il);
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
-        {
-            x => x.MatchSub(),
-            x => x.MatchStfld<Watcher.Rat>("bites")
-        }))
-        {
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(CreatureBitByPlayer);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILRatBitByPlayer!");
-        }
-
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(1),
-            x => x.MatchLdfld<Creature.Grasp>("grabber"),
-            x => x.MatchIsinst(typeof(Player))
-        }))
-        {
-            val.MoveAfterLabels();
-
-            val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(ActuallyKill);
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILRatBitByPlayer ActuallyKill!");
         }
     }
     #endregion

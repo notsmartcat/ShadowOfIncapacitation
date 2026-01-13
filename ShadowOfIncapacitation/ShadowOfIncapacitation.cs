@@ -131,6 +131,12 @@ public class Incapacitation : BaseUnityPlugin
 
             VultureHooks.Hooks.Apply();
             VultureHooks.ILHooks.Apply();
+
+            BigMothHooks.Hooks.Apply();
+            BigMothHooks.ILHooks.Apply();
+
+            RatHooks.Hooks.Apply();
+            RatHooks.ILHooks.Apply();
             #endregion
 
             On.RainWorld.OnModsInit += ModInit;
@@ -378,8 +384,10 @@ public class Incapacitation : BaseUnityPlugin
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && ShadowOfOptions.scav_state.Value != "Disabled" ||
             (self.creatureTemplate.type == CreatureTemplate.Type.Slugcat || ModManager.MSC && self.creatureTemplate.type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC) && ShadowOfOptions.slug_state.Value != "Disabled" || 
             (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Disabled" ||
-            (ModManager.MSC && (
-            self.creatureTemplate.TopAncestor().type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.FireBug && ShadowOfOptions.fire_state.Value != "Disabled"))))
+            ModManager.MSC && self.creatureTemplate.TopAncestor().type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.FireBug && ShadowOfOptions.fire_state.Value != "Disabled" ||
+            ModManager.Watcher && (
+            self.creatureTemplate.TopAncestor().type == Watcher.WatcherEnums.CreatureTemplateType.BigMoth ||
+            self.creatureTemplate.TopAncestor().type == Watcher.WatcherEnums.CreatureTemplateType.Rat)))
         {
             return true;
         }

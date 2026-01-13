@@ -19,6 +19,9 @@ internal class Hooks
         On.NeedleWormAI.Update += NeedleWormAIUpdate;
         On.NeedleWormAI.WantToStayInDenUntilEndOfCycle += NeedleWormAIWantToStayInDenUntilEndOfCycle;
 
+        //On.NeedleWormGraphics.DrawSprites += NeedleWormGraphicsDrawSprites;
+        //On.NeedleWormGraphics.Update += NeedleWormGraphicsUpdate;
+
         On.SmallNeedleWorm.Update += SmallNeedleWormUpdate;
     }
 
@@ -333,7 +336,28 @@ internal class Hooks
     }
     #endregion
 
-    #region SmallNeedleWormAI
+    #region NeedleWormGraphics
+    static void NeedleWormGraphicsDrawSprites(On.NeedleWormGraphics.orig_DrawSprites orig, NeedleWormGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+    {
+        orig(self, sLeaser, rCam, timeStacker, camPos);
+
+        if (!breathstorage.TryGetValue(self, out BreathData data) || self.culled)
+        {
+            return;
+        }
+    }
+    static void NeedleWormGraphicsUpdate(On.NeedleWormGraphics.orig_Update orig, NeedleWormGraphics self)
+    {
+        orig(self);
+
+        if (BreathCheck(self.worm))
+        {
+            MiscHooks.UpdateBreath(self);
+        }
+    }
+    #endregion
+
+    #region SmallNeedleWorm
     static void SmallNeedleWormUpdate(On.SmallNeedleWorm.orig_Update orig, SmallNeedleWorm self, bool eu)
     {
         orig(self, eu);

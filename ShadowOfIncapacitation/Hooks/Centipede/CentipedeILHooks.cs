@@ -197,7 +197,7 @@ internal class ILHooks
 
             val.Emit(OpCodes.Ldarg_0);
             val.Emit<CentipedeGraphics>(OpCodes.Ldfld, "centipede");
-            val.EmitDelegate(IsIncon);
+            val.EmitDelegate(IsInconBase);
             val.Emit(OpCodes.Brtrue_S, target);
         }
         else

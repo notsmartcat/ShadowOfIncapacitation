@@ -21,7 +21,7 @@ internal class Hooks
     {
         orig(self, eu);
 
-        if (!inconstorage.TryGetValue(self.abstractCreature, out InconData data) || !IsInconBase(self) || self.room == null)
+        if (self.room == null || !inconstorage.TryGetValue(self.abstractCreature, out InconData data) || !IsInconBase(self))
         {
             return;
         }

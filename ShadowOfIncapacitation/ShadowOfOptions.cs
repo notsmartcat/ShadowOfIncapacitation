@@ -177,6 +177,27 @@ public class ShadowOfOptions : OptionInterface
         fire_den = config.Bind("fire_den", false, new ConfigurableInfo("If On Incapacitated Firebugs will gain back their eggs and spears when revived using the den. (The eggs and spears will always spawn back on the FireBug if it Cheats Death outside of the player den) (Default = false)", null, "", new object[1] { "Den" }));
         #endregion
         #endregion
+
+        #region DLCShared
+        #region Yeek
+        yee_state = config.Bind("yee_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Yeek"));
+
+        yee_voice = config.Bind("yee_voice", false, new ConfigurableInfo("If On Incapacitated Vultures will attempt to bite prey near them. The bites will never actually damage anything (Default = false)", null, "", new object[1] { "Voice" }));
+        yee_hop = config.Bind("yee_hop", false, new ConfigurableInfo("If On and Vulture Attempt Bite is On Incapacitated Vultures will slightly move themselves forward during bites, this will move the Vulture. (Default = false)", null, "", new object[1] { "Hop" }));
+        #endregion
+        #endregion
+
+        #region Watcher
+        #region BigMoth
+        moth_state = config.Bind("moth_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Moth"));
+        #endregion
+
+        #region Rat
+        rat_state = config.Bind("rat_state", "Incapacitation, Cheating Death and Den Revive", new ConfigurableInfo("Rat"));
+
+        rat_corpse = config.Bind("rat_corpse", false, new ConfigurableInfo("If On Rats will not consider Incapacitated or Unconscious creatures as dead. (Default = false)", null, "", new object[1] { "Corpse Sniffer" }));
+        #endregion
+        #endregion
         #endregion
     }
 
@@ -474,6 +495,37 @@ public class ShadowOfOptions : OptionInterface
         AddNewLine();
         AddCheckBox(fire_spear, (string)fire_spear.info.Tags[0]);
         AddCheckBox(fire_den, (string)fire_den.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[4]);
+        DrawBox(ref Tabs[4]);
+        #endregion
+
+        #region Yeek
+        AddNewLine(0.5f);
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[4], yee_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(yee_voice, (string)yee_voice.info.Tags[0]);
+        AddCheckBox(yee_hop, (string)yee_hop.info.Tags[0]);
+        DrawCheckBoxes(ref Tabs[4]);
+        DrawBox(ref Tabs[4]);
+        #endregion
+
+        #region Moth
+        AddNewLine(0.5f);
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[4], moth_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        DrawBox(ref Tabs[4]);
+        #endregion
+
+        #region Rat
+        AddNewLine(0.5f);
+        AddBox();
+        AddNewLine();
+        DrawComboBox(ref Tabs[4], rat_state, new List<string> { "Disabled", "Incapacitation Only", "Incapacitation and Cheating Death", "Incapacitation, Cheating Death and Den Revive" });
+        AddNewLine();
+        AddCheckBox(rat_corpse, (string)rat_corpse.info.Tags[0]);
         DrawCheckBoxes(ref Tabs[4]);
         DrawBox(ref Tabs[4]);
         #endregion
@@ -1322,6 +1374,27 @@ public class ShadowOfOptions : OptionInterface
 
     public static Configurable<bool> fire_spear;
     public static Configurable<bool> fire_den;
+    #endregion
+    #endregion
+
+    #region DLCShared
+    #region Yeek
+    public static Configurable<string> yee_state;
+
+    public static Configurable<bool> yee_voice;
+    public static Configurable<bool> yee_hop;
+    #endregion
+    #endregion
+
+    #region Watcher
+    #region BigMoth
+    public static Configurable<string> moth_state;
+    #endregion
+
+    #region Rat
+    public static Configurable<string> rat_state;
+
+    public static Configurable<bool> rat_corpse;
     #endregion
     #endregion
     #endregion
