@@ -207,7 +207,7 @@ internal class ForceDieHooks
             {
                 for (int j = 0; j < self.room.physicalObjects[i].Count; j++)
                 {
-                    if (!ModManager.Watcher || !(self.room.physicalObjects[i][j] is Creature) || (!((self.room.physicalObjects[i][j] as Creature).abstractCreature.creatureTemplate.type == Watcher.WatcherEnums.CreatureTemplateType.BoxWorm) && !((self.room.physicalObjects[i][j] as Creature).abstractCreature.creatureTemplate.type == Watcher.WatcherEnums.CreatureTemplateType.FireSprite)))
+                    if (!ModManager.Watcher || self.room.physicalObjects[i][j] is not Creature || (!((self.room.physicalObjects[i][j] as Creature).abstractCreature.creatureTemplate.type == Watcher.WatcherEnums.CreatureTemplateType.BoxWorm) && !((self.room.physicalObjects[i][j] as Creature).abstractCreature.creatureTemplate.type == Watcher.WatcherEnums.CreatureTemplateType.FireSprite)))
                     {
                         for (int k = 0; k < self.room.physicalObjects[i][j].bodyChunks.Length; k++)
                         {

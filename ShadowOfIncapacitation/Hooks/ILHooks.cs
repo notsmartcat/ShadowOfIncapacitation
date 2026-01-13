@@ -249,6 +249,7 @@ internal class ILHooksMisc
         {
             Incapacitation.Logger.LogInfo(all + "Could not find match ILCreatureUpdate PyroDeath!");
         }
+
         if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
         {
                 x => x.MatchLdarg(0),
@@ -299,7 +300,7 @@ internal class ILHooksMisc
         })) { }
         else
         {
-            Incapacitation.Logger.LogInfo(all + "Could not find match ILCreatureUpdate Bleed!");
+            Incapacitation.Logger.LogInfo(all + "Could not find match ILCreatureUpdate Poison Skip!");
         }
 
         #region PoisonDeath
@@ -317,7 +318,7 @@ internal class ILHooksMisc
         }
         catch (Exception)
         {
-            Incapacitation.Logger.LogError(all + "Failed to inject for Bleed Out!");
+            Incapacitation.Logger.LogError(all + "Could not find match ILCreatureUpdate Poison!");
         }
         #endregion
 
@@ -372,7 +373,7 @@ internal class ILHooksMisc
         }
         catch (Exception)
         {
-            Incapacitation.Logger.LogError(all + "Failed to inject for FellOutOfRoom!");
+            Incapacitation.Logger.LogError(all + "Could not find match ILCreatureUpdate FellOutOfRoom!");
         }
         #endregion
     }
