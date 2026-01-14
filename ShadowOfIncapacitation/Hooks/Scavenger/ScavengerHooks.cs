@@ -426,7 +426,7 @@ internal class Hooks
 
         MiscHooks.ReturnToDenUpdate(self);
 
-        if (!ShadowOfOptions.scav_rescue.Value || !inconstorage.TryGetValue(self.scavenger.abstractCreature, out InconData data))
+        if (!ShadowOfOptions.scav_rescue.Value || self.scavenger.room.game.GetArenaGameSession?.chMeta != null || !inconstorage.TryGetValue(self.scavenger.abstractCreature, out InconData data))
         {
             return;
         }

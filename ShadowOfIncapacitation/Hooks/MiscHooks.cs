@@ -357,6 +357,11 @@ internal class MiscHooks
                         {
                             data.forceTame = true;
                         }
+                        if (ModManager.MSC && self.creature.world.game.IsStorySession && self.creature.world.game.StoryCharacter == MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Artificer)
+                        {
+                            self.alive = false;
+                            data.actuallyDead = true;
+                        }
                     }
                 }
 
