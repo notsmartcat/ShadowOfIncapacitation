@@ -386,8 +386,8 @@ public class Incapacitation : BaseUnityPlugin
             (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Disabled" ||
             ModManager.MSC && self.creatureTemplate.TopAncestor().type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.FireBug && ShadowOfOptions.fire_state.Value != "Disabled" ||
             ModManager.Watcher && (
-            self.creatureTemplate.TopAncestor().type == Watcher.WatcherEnums.CreatureTemplateType.BigMoth ||
-            self.creatureTemplate.TopAncestor().type == Watcher.WatcherEnums.CreatureTemplateType.Rat)))
+            self.creatureTemplate.TopAncestor().type == Watcher.WatcherEnums.CreatureTemplateType.BigMoth && ShadowOfOptions.moth_state.Value != "Disabled" ||
+            self.creatureTemplate.TopAncestor().type == Watcher.WatcherEnums.CreatureTemplateType.Rat && ShadowOfOptions.rat_state.Value != "Disabled")))
         {
             return true;
         }
@@ -409,9 +409,12 @@ public class Incapacitation : BaseUnityPlugin
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.LizardTemplate && ShadowOfOptions.liz_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigNeedleWorm && ShadowOfOptions.noodle_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && (!ModManager.MSC || self.creatureTemplate.type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.ScavengerKing) && ShadowOfOptions.scav_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
-            ModManager.MSC && self.creatureTemplate.type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC && ShadowOfOptions.slug_state.Value == "Incapacitation and Den Revive" ||
             (ModManager.MSC && (
-            self.creatureTemplate.TopAncestor().type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.FireBug && ShadowOfOptions.fire_state.Value == "Incapacitation, Cheating Death and Den Revive"))))
+            self.creatureTemplate.type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC && ShadowOfOptions.slug_state.Value == "Incapacitation and Den Revive" ||
+            self.creatureTemplate.TopAncestor().type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.FireBug && ShadowOfOptions.fire_state.Value == "Incapacitation, Cheating Death and Den Revive")) ||
+            (ModManager.Watcher && (
+            self.creatureTemplate.TopAncestor().type == Watcher.WatcherEnums.CreatureTemplateType.BigMoth && ShadowOfOptions.moth_state.Value == "Incapacitation, Cheating Death and Den Revive" ||
+            self.creatureTemplate.TopAncestor().type == Watcher.WatcherEnums.CreatureTemplateType.Rat && ShadowOfOptions.rat_state.Value == "Incapacitation, Cheating Death and Den Revive"))))
         {
             return true;
         }
@@ -436,8 +439,10 @@ public class Incapacitation : BaseUnityPlugin
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.BigNeedleWorm && ShadowOfOptions.noodle_state.Value != "Disabled" && ShadowOfOptions.noodle_state.Value != "Incapacitation Only" ||
             self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Scavenger && (!ModManager.MSC || self.creatureTemplate.type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.ScavengerKing) && ShadowOfOptions.scav_state.Value != "Disabled" && ShadowOfOptions.scav_state.Value != "Incapacitation Only" ||
             (self.creatureTemplate.TopAncestor().type == CreatureTemplate.Type.Vulture || (ModManager.DLCShared && self.creatureTemplate.type == DLCSharedEnums.CreatureTemplateType.MirosVulture)) && ShadowOfOptions.vul_state.Value != "Incapacitation and Cheating Death" ||
-            (ModManager.MSC && (
-            self.creatureTemplate.TopAncestor().type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.FireBug && ShadowOfOptions.fire_state.Value != "Disabled" && ShadowOfOptions.fire_state.Value != "Incapacitation Only"))))
+            (ModManager.MSC && self.creatureTemplate.TopAncestor().type == MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.FireBug && ShadowOfOptions.fire_state.Value != "Disabled" && ShadowOfOptions.fire_state.Value != "Incapacitation Only") ||
+            (ModManager.Watcher && (
+            self.creatureTemplate.TopAncestor().type == Watcher.WatcherEnums.CreatureTemplateType.BigMoth && ShadowOfOptions.moth_state.Value != "Disabled" && ShadowOfOptions.moth_state.Value != "Incapacitation Only" ||
+            self.creatureTemplate.TopAncestor().type == Watcher.WatcherEnums.CreatureTemplateType.Rat && ShadowOfOptions.rat_state.Value != "Disabled" && ShadowOfOptions.rat_state.Value != "Incapacitation Only"))))
         {
             return true;
         }
