@@ -426,7 +426,7 @@ internal class Hooks
 
         MiscHooks.ReturnToDenUpdate(self);
 
-        if (!ShadowOfOptions.scav_rescue.Value || self.scavenger.room.game.GetArenaGameSession?.chMeta != null || !inconstorage.TryGetValue(self.scavenger.abstractCreature, out InconData data))
+        if (!ShadowOfOptions.scav_rescue.Value || self.scavenger.room == null || self.scavenger.room.game.GetArenaGameSession?.chMeta != null || !inconstorage.TryGetValue(self.scavenger.abstractCreature, out InconData data))
         {
             return;
         }
@@ -440,7 +440,7 @@ internal class Hooks
                     List<AbstractCreature> list = new(self.scavenger.abstractCreature.Room.creatures);
                     foreach (AbstractCreature creature in list)
                     {
-                        if (creature.realizedCreature == null || creature.realizedCreature is not Scavenger scav || !ValidNeedlCheck(scav))
+                        if (creature.realizedCreature == null || creature.realizedCreature is not Scavenger scav || !ValidScavCheck(scav))
                         {
                             continue;
                         }
@@ -458,7 +458,7 @@ internal class Hooks
 
             if (self.behavior == ScavRescueIncon)
             {
-                if (data.rescueCandidate == null || !ValidNeedlCheck(data.rescueCandidate as Scavenger))
+                if (data.rescueCandidate == null || !ValidScavCheck(data.rescueCandidate as Scavenger))
                 {
                     data.rescueCandidate = null;
                     self.behavior = ScavengerAI.Behavior.Idle;
@@ -482,7 +482,7 @@ internal class Hooks
                     {
                         self.creature.abstractAI.SetDestination(self.denFinder.GetDenPosition().Value);
 
-                        if (self.scavenger.enteringShortCut.HasValue && self.scavenger.room != null && self.scavenger.room.shortcutData(self.scavenger.enteringShortCut.Value).shortCutType != null && self.scavenger.room.shortcutData(self.scavenger.enteringShortCut.Value).shortCutType == ShortcutData.Type.CreatureHole)
+                        if (self.scavenger.enteringShortCut.HasValue && self.scavenger.room.shortcutData(self.scavenger.enteringShortCut.Value).shortCutType != null && self.scavenger.room.shortcutData(self.scavenger.enteringShortCut.Value).shortCutType == ShortcutData.Type.CreatureHole)
                         {
                             scav.enteringShortCut = self.scavenger.enteringShortCut;
                             self.scavenger.LoseAllGrasps();
@@ -502,9 +502,9 @@ internal class Hooks
         catch (Exception e) { Incapacitation.Logger.LogError(e); }
 
         #region Local
-        bool ValidNeedlCheck(Scavenger scav)
+        bool ValidScavCheck(Scavenger scav)
         {
-            return scav.dead && !scav.King && (scav.grabbedBy.Count == 0 || self.scavenger.grasps[0].grabbed == scav);
+            return scav.dead && !scav.King && (scav.grabbedBy != null && scav.grabbedBy.Count == 0 || self.scavenger.grasps != null && self.scavenger.grasps.Length > 0 && self.scavenger.grasps[0].grabbed == scav);
         }
         #endregion
     }

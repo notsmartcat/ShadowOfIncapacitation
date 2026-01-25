@@ -113,12 +113,7 @@ internal class ForceDieHooks
     {
         orig(self);
 
-        if (!inconstorage.TryGetValue(self.abstractCreature, out _) || !IsComa(self))
-        {
-            return;
-        }
-
-        if (self.Hypothermia >= 1f && (float)self.stun > 50f)
+        if (IsComa(self) && self.Hypothermia >= 1f && (float)self.stun > 50f)
         {
             ActuallyKill(self);
         }

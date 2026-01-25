@@ -2,6 +2,7 @@
 using MonoMod.Cil;
 using System;
 using UnityEngine;
+
 using static Incapacitation.Incapacitation;
 
 namespace Incapacitation;
@@ -135,40 +136,23 @@ internal class ILHooksMisc
             Incapacitation.Logger.LogInfo(all + "Could not find match ILCreatureHeardNoise!");
         }
     }
+
     static void ILCreatureHypothermiaUpdate(ILContext il)
     {
         ILCursor val = new(il);
         ILLabel target = null;
 
         #region Gain
-        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[3]
+        if (val.TryGotoNext(MoveType.Before, new Func<Instruction, bool>[2]
         {
             x => x.MatchLdarg(0),
-            x => x.MatchLdcR4(0.0f),
-            x => x.MatchCall<RainWorldGame>("get_DefaultHeatSourceWarmth")
+            x => x.MatchCall<Creature>("get_Hypothermia"),
         }))
         {
-            val.MoveAfterLabels();
-
-            target = val.MarkLabel();
-        }
-        else
-        {
-            Incapacitation.Logger.LogInfo(all + "Could not find match for ILCreatureHypothermiaUpdate Gain target!");
-        }
-
-        if (val.TryGotoPrev(MoveType.Before, new Func<Instruction, bool>[3]
-        {
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<Creature>("get_dead"),
-            x => x.MatchBrtrue(out _)
-        }))
-        {
-            val.MoveAfterLabels();
+            val.MoveBeforeLabels();
 
             val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(IsComa);
-            val.Emit(OpCodes.Brtrue_S, target);
+            val.EmitDelegate(HypothermiaUpdate);
         }
         else
         {
@@ -219,16 +203,40 @@ internal class ILHooksMisc
         }))
         {
             val.Emit(OpCodes.Ldarg_0);
-            val.EmitDelegate(delegate (Creature creature)
-            {
-                TryAddKillFeedEntry(creature, "Bleed");
-            });
+            val.EmitDelegate(ActuallyKill);
         }
         else
         {
             Incapacitation.Logger.LogInfo(all + "Could not find match ILCreatureHypothermiaUpdate Die!");
         }
     }
+    public static void HypothermiaUpdate(Creature self)
+    {
+        if (!IsComa(self))
+        {
+            return;
+        }
+
+        self.HypothermiaGain = Mathf.Lerp(0f, RainWorldGame.DefaultHeatSourceWarmth * 0.1f, Mathf.InverseLerp(0.1f, 0.95f, self.room.world.rainCycle.CycleProgression));
+        if (!self.abstractCreature.HypothermiaImmune)
+        {
+            float num3 = (float)self.room.world.rainCycle.cycleLength + (float)RainWorldGame.BlizzardHardEndTimer(self.room.game.IsStorySession);
+            self.HypothermiaGain += Mathf.Lerp(0f, RainWorldGame.BlizzardMaxColdness, Mathf.InverseLerp(0f, num3, (float)self.room.world.rainCycle.timer));
+            self.HypothermiaGain += Mathf.Lerp(0f, 50f, Mathf.InverseLerp(num3, num3 * 5f, (float)self.room.world.rainCycle.timer));
+        }
+        Color blizzardPixel = self.room.blizzardGraphics.GetBlizzardPixel((int)(self.mainBodyChunk.pos.x / 20f), (int)(self.mainBodyChunk.pos.y / 20f));
+        self.HypothermiaGain += blizzardPixel.g / Mathf.Lerp(9100f, 5350f, Mathf.InverseLerp(0f, (float)self.room.world.rainCycle.cycleLength + 4300f, (float)self.room.world.rainCycle.timer));
+        self.HypothermiaGain += blizzardPixel.b / 8200f;
+        self.HypothermiaExposure = blizzardPixel.g;
+        if (self.Submersion >= 0.1f)
+        {
+            self.HypothermiaExposure = 1f;
+        }
+        self.HypothermiaGain += self.Submersion / 7000f;
+        self.HypothermiaGain = Mathf.Lerp(0f, self.HypothermiaGain, Mathf.InverseLerp(-0.5f, self.room.game.IsStorySession ? 1f : 3.6f, self.room.world.rainCycle.CycleProgression));
+        self.HypothermiaGain *= Mathf.InverseLerp(50f, -10f, self.TotalMass);
+    }
+
     public static void ILCreatureUpdate(ILContext il)
     {
         ILCursor val = new(il);
