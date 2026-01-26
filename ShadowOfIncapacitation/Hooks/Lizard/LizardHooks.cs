@@ -509,6 +509,8 @@ internal class Hooks
             if (self.LizardState.health <= ShadowOfOptions.insta_die_threshold.Value || self.LizardState.health <= data.dieHealthThreshold && type != Creature.DamageType.Blunt)
             {
                 data.isAlive = false;
+                self.Die();
+
                 if (ShadowOfOptions.debug_logs.Value)
                     Debug.Log(all + self + " reached the insta die threshold and died");
                 return;

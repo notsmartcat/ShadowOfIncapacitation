@@ -88,7 +88,7 @@ internal class MiscHooks
                     self.abstractCreature.state.alive = true;
 
                 if (ShadowOfOptions.debug_logs.Value)
-                    Debug.Log(all + self + " is dead, it will not survive the cycle");
+                    Debug.Log(all + self + " is dead");
 
                 orig(self);
             }
