@@ -23,15 +23,11 @@ internal class Hooks
     #region Slugcat
     static bool PlayerCanEatMeat(On.Player.orig_CanEatMeat orig, Player self, Creature crit)
     {
-        return orig(self, crit) && (crit.abstractCreature.creatureTemplate.TopAncestor().type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC || !IsComa(crit));
+        return orig(self, crit) && !ModManager.MSC || (crit.abstractCreature.creatureTemplate.TopAncestor().type != MoreSlugcats.MoreSlugcatsEnums.CreatureTemplateType.SlugNPC || !IsComa(crit));
     }
     static bool PlayerCanIPutDeadSlugOnBack(On.Player.orig_CanIPutDeadSlugOnBack orig, Player self, Player pickUpCandidate)
     {
-        if (ModManager.MSC && pickUpCandidate != null && IsComa(pickUpCandidate))
-        {
-            return true;
-        }
-        return orig(self, pickUpCandidate);
+        return orig(self, pickUpCandidate) || pickUpCandidate != null && IsComa(pickUpCandidate);
     }
     #endregion
 

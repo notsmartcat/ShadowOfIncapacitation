@@ -166,7 +166,6 @@ public class ShadowOfOptions : OptionInterface
         vul_attack_move = config.Bind("vul_attack_move", false, new ConfigurableInfo("If On and Vulture Attempt Bite is On Incapacitated Vultures will slightly move themselves forward during bites, this will move the Vulture. (Default = false)", null, "", new object[1] { "Lunge" }));
         vul_grab = config.Bind("vul_grab", false, new ConfigurableInfo("If On Incapacitated Vultures will will be capable of grabbing walls and ceilings with their tentacles(wings), this will move the Vulture. (Default = false)", null, "", new object[1] { "Grab" }));
         #endregion
-
         #endregion
 
         #region Downpour
@@ -534,52 +533,52 @@ public class ShadowOfOptions : OptionInterface
 
     public override void Update()
     {
-        int bleed = int.Parse(((UIconfig)OPunconbleedSlider).value);
-        int bleed2 = int.Parse(((UIconfig)OPinconbleedSlider).value);
+        int bleed = int.Parse(OPunconbleedSlider.value);
+        int bleed2 = int.Parse(OPinconbleedSlider.value);
         int bleed3 = Mathf.Clamp(100 - bleed, 0, 100);
 
-        int blunt = int.Parse(((UIconfig)OPunconbluntSlider).value);
-        int blunt2 = int.Parse(((UIconfig)OPinconbluntSlider).value);
+        int blunt = int.Parse(OPunconbluntSlider.value);
+        int blunt2 = int.Parse(OPinconbluntSlider.value);
         int blunt3 = Mathf.Clamp(100 - blunt, 0, 100);
 
-        int stab = int.Parse(((UIconfig)OPunconstabSlider).value);
-        int stab2 = int.Parse(((UIconfig)OPinconstabSlider).value);
+        int stab = int.Parse(OPunconstabSlider.value);
+        int stab2 = int.Parse(OPinconstabSlider.value);
         int stab3 = Mathf.Clamp(100 - stab, 0, 100);
 
-        int electric = int.Parse(((UIconfig)OPunconelectricSlider).value);
-        int electric2 = int.Parse(((UIconfig)OPinconelectricSlider).value);
+        int electric = int.Parse(OPunconelectricSlider.value);
+        int electric2 = int.Parse(OPinconelectricSlider.value);
         int electric3 = Mathf.Clamp(100 - electric, 0, 100);
 
-        int explosion = int.Parse(((UIconfig)OPunconexplosionSlider).value);
-        int explosion2 = int.Parse(((UIconfig)OPinconexplosionSlider).value);
+        int explosion = int.Parse(OPunconexplosionSlider.value);
+        int explosion2 = int.Parse(OPinconexplosionSlider.value);
         int explosion3 = Mathf.Clamp(100 - explosion, 0, 100);
 
-        float thresholdMin = Mathf.Floor(float.Parse(((UIconfig)OPdiethresholdminSlider).value) * 10f) / 10f;
-        float thresholdMax = Mathf.Floor(float.Parse(((UIconfig)OPdiethresholdmaxSlider).value) * 10f) / 10f;
+        float thresholdMin = Mathf.Floor(float.Parse(OPdiethresholdminSlider.value) * 10f) / 10f;
+        float thresholdMax = Mathf.Floor(float.Parse(OPdiethresholdmaxSlider.value) * 10f) / 10f;
 
         if (bleed2 - bleed <= 0)
         {
-            ((UIconfig)OPinconbleedSlider).value = bleed.ToString();
+            OPinconbleedSlider.value = bleed.ToString();
         }
         if (blunt2 - blunt <= 0)
         {
-            ((UIconfig)OPinconbluntSlider).value = blunt.ToString();
+            OPinconbluntSlider.value = blunt.ToString();
         }
         if (stab2 - stab <= 0)
         {
-            ((UIconfig)OPinconstabSlider).value = stab.ToString();
+            OPinconstabSlider.value = stab.ToString();
         }
         if (electric2 - electric <= 0)
         {
-            ((UIconfig)OPinconelectricSlider).value = electric.ToString();
+            OPinconelectricSlider.value = electric.ToString();
         }
         if (explosion2 - explosion <= 0)
         {
-            ((UIconfig)OPinconexplosionSlider).value = explosion.ToString();
+            OPinconexplosionSlider.value = explosion.ToString();
         }
         if (thresholdMax - thresholdMin <= 0)
         {
-            ((UIconfig)OPdiethresholdmaxSlider).value = thresholdMin.ToString();
+            OPdiethresholdmaxSlider.value = thresholdMin.ToString();
         }
 
         OPinconbleedSlider._label.text = Mathf.Clamp(bleed2 - bleed, 0, bleed3) + "%";
